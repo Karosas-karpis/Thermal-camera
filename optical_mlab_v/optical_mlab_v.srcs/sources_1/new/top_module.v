@@ -30,13 +30,12 @@ module top_module (
     output vsync,
     output [3:0] vgaRed,
     output [3:0] vgaGreen,
-    output [3:0] vgaBlue,
+    output [3:0] vgaBlue
     
-    // Camera Configuration Pins (Pmod)
-    output sioc,
-    inout  siod
-    
-    
+    // Camera Configuration Pins (Pmod) — commented out for VGA-only test
+    // (unconstrained I/O can block bitstream / place on wrong pins)
+    // output sioc,
+    // inout  siod
 );
 
     reg [26:0] count = 0; 
@@ -53,16 +52,15 @@ module top_module (
         end
     end
     
-    //// camera sccb
-    wire camera_config_done; // Wire required to catch the output
-    
-    sccb_init camera_setup (
-        .clk(clk),               // Changed to match top_module's 'clk'
-        .reset(1'b0),            // Tied to 0 (no reset button used right now)
-        .sioc(sioc),             // Connects to physical pin
-        .siod(siod),             // Connects to physical pin
-        .config_done(camera_config_done)
-    );
+    //// camera sccb — commented out for VGA-only test
+    // wire camera_config_done;
+    // sccb_init camera_setup (
+    //     .clk(clk),
+    //     .reset(1'b0),
+    //     .sioc(sioc),
+    //     .siod(siod),
+    //     .config_done(camera_config_done)
+    // );
     
     //VGA test
     wire [11:0] vga_rgb; // Internal wire to catch the 12-bit color output

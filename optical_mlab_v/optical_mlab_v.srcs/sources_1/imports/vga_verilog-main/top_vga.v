@@ -9,7 +9,7 @@ module vga_test(
 	input [11:0] sw,       // 12 bits for color
 	output hsync, 
 	output vsync,
-	output [11:0] rgb      // 12 FPGA pins for RGB(4 per color)
+	output reg [11:0] rgb  // 12 FPGA pins for RGB(4 per color)
 );
 	
 	// Signal Declaration
@@ -26,7 +26,12 @@ module vga_test(
     else
        rgb_reg <= sw;
     
-    // Output
-    assign rgb = (video_on) ? rgb_reg : 12'b0;   // while in display area RGB color = sw, else all OFF
+    // Output: show switch color only in the visible display area
+    always @(*) begin
+        if (video_on)
+            rgb = rgb_reg;   // inside 640x480: drive color from switches
+        else
+            rgb = 12'b0;     // blanking region: RGB off
+    end
         
 endmodule

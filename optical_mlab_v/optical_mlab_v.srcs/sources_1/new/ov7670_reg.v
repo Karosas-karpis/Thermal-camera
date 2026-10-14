@@ -21,7 +21,7 @@
 
 `timescale 1ns / 1ps
 
-module ov7670_registers (
+module ov7670_reg (
     input clk,
     input [7:0] config_step,
     output reg [15:0] command
