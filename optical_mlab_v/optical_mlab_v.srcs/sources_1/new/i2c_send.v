@@ -16,94 +16,163 @@ module i2c_sender (
     output reg done = 0
 );
 
-    reg siod_out = 1;
-    reg siod_drive = 1;
-    assign siod = (siod_drive) ? siod_out : 1'bz;
+    // SCCB/I2C data is open drain: drive zero or release the line.
+    reg siod_drive_low = 0;
+    assign siod = siod_drive_low ? 1'b0 : 1'bz;
 
-    // ~250 kHz bit timing from 100 MHz
-    reg [8:0] clk_div = 0;
-    wire step_tick = (clk_div == 399);
+    // One state step per microsecond from the 100 MHz board clock.
+    // Four states per data bit produce a 250 kHz SIOC.
+    reg [6:0] clk_div = 0;
+    wire state_tick = (clk_div == 7'd99);
 
-    localparam CAMERA_ID = 8'h42;
+    localparam [7:0] CAMERA_ID = 8'h42;
+    localparam [3:0]
+        IDLE         = 4'd0,
+        START_HOLD   = 4'd1,
+        START_LOW    = 4'd2,
+        BIT_SETUP    = 4'd3,
+        BIT_HIGH     = 4'd4,
+        BIT_HOLD     = 4'd5,
+        BIT_FALL     = 4'd6,
+        DC_SETUP     = 4'd7,
+        DC_HIGH      = 4'd8,
+        DC_HOLD      = 4'd9,
+        DC_FALL      = 4'd10,
+        STOP_LOW     = 4'd11,
+        STOP_HIGH    = 4'd12,
+        STOP_RELEASE = 4'd13,
+        DC_NEXT      = 4'd14,
+        DC_STOP      = 4'd15;
 
-    reg [7:0] state = 0;
-    reg [15:0] delay_cnt = 0;
+    reg [3:0] state = IDLE;
+    reg [1:0] byte_index = 0;
+    reg [2:0] bit_index = 7;
+    reg [17:0] delay_cnt = 0;
+
+    wire [7:0] tx_byte = (byte_index == 0) ? CAMERA_ID :
+                         (byte_index == 1) ? command[15:8] :
+                                             command[7:0];
+    wire tx_bit = tx_byte[bit_index];
 
     always @(posedge clk) begin
         if (reset) begin
             clk_div <= 0;
-            state <= 0;
+            state <= IDLE;
+            byte_index <= 0;
+            bit_index <= 7;
+            delay_cnt <= 0;
             config_step <= 0;
             done <= 0;
             sioc <= 1;
-            siod_out <= 1;
-            siod_drive <= 1;
-            delay_cnt <= 0;
+            siod_drive_low <= 0;
         end else if (!done) begin
-            if (step_tick)
+            if (state_tick)
                 clk_div <= 0;
             else
-                clk_div <= clk_div + 1;
+                clk_div <= clk_div + 1'b1;
 
-            // Toggle SIOC in the middle of each bit period
-            if (state >= 2 && state <= 28) begin
-                if (clk_div == 99)  sioc <= 1;
-                if (clk_div == 299) sioc <= 0;
-            end
-
-            if (step_tick) begin
-                if (command == 16'hFFFF) begin
-                    done <= 1;
-                end else if (command == 16'hFFFE) begin
-                    // wait after soft reset (~a few ms)
-                    // longer pause after soft reset (~200 ms)
-                    if (delay_cnt == 16'd50000) begin
-                        delay_cnt <= 0;
-                        config_step <= config_step + 1;
-                    end else begin
-                        delay_cnt <= delay_cnt + 1;
+            if (state_tick) begin
+                case (state)
+                    IDLE: begin
+                        sioc <= 1'b1;
+                        siod_drive_low <= 1'b0;
+                        if (command == 16'hFFFF) begin
+                            done <= 1'b1;
+                        end else if (command == 16'hFFFE) begin
+                            // OV7670 requires a delay after its software reset.
+                            if (delay_cnt == 18'd199999) begin
+                                delay_cnt <= 0;
+                                config_step <= config_step + 1'b1;
+                            end else begin
+                                delay_cnt <= delay_cnt + 1'b1;
+                            end
+                        end else begin
+                            delay_cnt <= 0;
+                            byte_index <= 0;
+                            bit_index <= 7;
+                            siod_drive_low <= 1'b1; // START: SDA falls while SCL high
+                            state <= START_HOLD;
+                        end
                     end
-                end else begin
-                    case (state)
-                        0: begin siod_out <= 0; state <= 1; end
-                        1: begin sioc <= 0; state <= 2; end
 
-                        2,3,4,5,6,7,8,9: begin
-                            siod_out <= CAMERA_ID[9 - state];
-                            if (state == 9) state <= 10;
-                            else state <= state + 1;
+                    START_HOLD: state <= START_LOW;
+
+                    START_LOW: begin
+                        sioc <= 1'b0;
+                        state <= BIT_SETUP;
+                    end
+
+                    BIT_SETUP: begin
+                        siod_drive_low <= ~tx_bit;
+                        state <= BIT_HIGH;
+                    end
+
+                    BIT_HIGH: begin
+                        sioc <= 1'b1;
+                        state <= BIT_HOLD;
+                    end
+
+                    BIT_HOLD: state <= BIT_FALL;
+
+                    BIT_FALL: begin
+                        sioc <= 1'b0;
+                        if (bit_index == 0) begin
+                            siod_drive_low <= 1'b0;
+                            state <= DC_SETUP;
+                        end else begin
+                            bit_index <= bit_index - 1'b1;
+                            state <= BIT_SETUP;
                         end
+                    end
 
-                        10: begin siod_drive <= 0; state <= 11; end
+                    // SCCB defines the ninth clock as "don't care", not as
+                    // a guaranteed I2C acknowledge. Release SIOD and continue.
+                    DC_SETUP: begin
+                        siod_drive_low <= 1'b0;
+                        state <= DC_HIGH;
+                    end
 
-                        11,12,13,14,15,16,17,18: begin
-                            siod_drive <= 1;
-                            siod_out <= command[18 - state + 8];
-                            if (state == 18) state <= 19;
-                            else state <= state + 1;
+                    DC_HIGH: begin
+                        sioc <= 1'b1;
+                        state <= DC_HOLD;
+                    end
+
+                    DC_HOLD: state <= DC_FALL;
+
+                    DC_FALL: begin
+                        sioc <= 1'b0;
+                        if (byte_index == 2) begin
+                            state <= DC_STOP;
+                        end else begin
+                            byte_index <= byte_index + 1'b1;
+                            bit_index <= 7;
+                            state <= DC_NEXT;
                         end
+                    end
 
-                        19: begin siod_drive <= 0; state <= 20; end
+                    // Keep SIOD released long enough after the ninth clock
+                    // before either sending the next byte or issuing STOP.
+                    DC_NEXT: state <= BIT_SETUP;
+                    DC_STOP: state <= STOP_LOW;
 
-                        20,21,22,23,24,25,26,27: begin
-                            siod_drive <= 1;
-                            siod_out <= command[27 - state];
-                            if (state == 27) state <= 28;
-                            else state <= state + 1;
-                        end
+                    STOP_LOW: begin
+                        siod_drive_low <= 1'b1;
+                        state <= STOP_HIGH;
+                    end
 
-                        28: begin siod_drive <= 0; state <= 29; end
+                    STOP_HIGH: begin
+                        sioc <= 1'b1;
+                        state <= STOP_RELEASE;
+                    end
 
-                        29: begin siod_drive <= 1; siod_out <= 0; sioc <= 0; state <= 30; end
-                        30: begin sioc <= 1; state <= 31; end
-                        31: begin siod_out <= 1; state <= 32; end
+                    STOP_RELEASE: begin
+                        siod_drive_low <= 1'b0; // STOP: SDA rises while SCL high
+                        config_step <= config_step + 1'b1;
+                        state <= IDLE;
+                    end
 
-                        32: begin
-                            state <= 0;
-                            config_step <= config_step + 1;
-                        end
-                    endcase
-                end
+                    default: state <= IDLE;
+                endcase
             end
         end
     end

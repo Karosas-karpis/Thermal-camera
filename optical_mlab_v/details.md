@@ -52,22 +52,34 @@ This is the first problem to solve.
 
 The current jumper wires are about 20 cm long. This is too long for a loose parallel camera bus running near 25 MHz. The clock edges are much faster than the clock frequency suggests, so long jumper wires can cause ringing, crosstalk and unstable logic levels.
 
+#### Online reports (OV7670 crosstalk / long wires)
+
+This is a well-documented OV7670 failure mode:
+
+- [01signal: OV7670 capture on Zynq](https://www.01signal.com/xillinux/ov7670-camera-capture/) — keep Dupont jumpers **10 cm or less**, ideally **~5 cm**. Longer wires impair digital signal quality through **crosstalk**. Excessive noise on horizontal sync causes a **jumping video image with green and purple stripes**.
+- [01signal: OV7670 SCCB / drive current](https://www.01signal.com/xillinux/ov7670-sccb-control/) — if wires must stay longer, reduce the sensor I/O drive current: write **COM2 (`0x09`) = `0x00`** (1× drive). That can reduce crosstalk-related instability.
+- [Circuit Digest: OV7670 with Arduino](https://circuitdigest.com/microcontroller-projects/how-to-use-ov7670-camera-module-with-arduino) — wire length and quality strongly affect picture quality and noise; scrambled/noisy images are often from loose or long jumpers, bad 3.3 V, or wrong registers.
+- [ESP32 forum: OV7670 bad images](https://esp32.com/viewtopic.php?t=35883) — reports of garbage images with ~20 cm wiring; impedance mismatch and register setup both suspected.
+- Other notes: lines over ~10 cm often worsen quality; twisted pairs or a buffer (e.g. 74HC245) are sometimes suggested; FPGA designs should sample on the correct PCLK edge and treat PCLK carefully as a source-synchronous input.
+
 Typical signs are:
 
 - colored lines and random pixels
+- green/purple stripes and a jumping frame (HREF/HSYNC crosstalk)
 - an image that changes when the wires are touched
 - better or worse results when wires are bundled
 - unstable rows or parts of the frame
 
 Recommended fixes:
 
-1. Shorten the wires to about 5 to 10 cm.
+1. Shorten the wires to about 5 to 10 cm (target ~5 cm).
 2. Use more than one ground connection.
 3. Run PCLK next to a ground wire.
 4. Run XCLK next to a ground wire.
 5. Keep clock wires away from D0 through D7 where possible.
 6. Add a 100 nF capacitor and a 10 uF capacitor near the camera power pins.
 7. Test with a lower camera clock such as 12.5 MHz.
+8. If length is unavoidable, set COM2 (`0x09`) to `0x00` for 1× drive current; optionally try small series resistors (~22–33 Ω) on fast lines.
 
 Bundling all signal wires may change the picture, but it is not a reliable solution. It can reduce ringing by accident while also increasing crosstalk.
 
@@ -85,9 +97,9 @@ The Basys 3 does not have enough block RAM for two 320 by 240 RGB565 frames. Dou
 
 ### 3. Camera configuration
 
-The camera is configured through SCCB using SCL and SDA. The current sender does not properly report camera acknowledgement, so `config_done` only means that all commands were sent. It does not prove that the camera accepted them.
+The camera is configured through SCCB using SCL and SDA. SCCB defines the ninth clock after each byte as a don't-care bit, not a guaranteed I2C acknowledgement. `config_done` therefore means the complete list was sent; use the internal color bars to verify the camera accepted the configuration.
 
-The camera color-bar mode is useful for testing. If color bars are also corrupted, the likely problem is wiring, timing or capture. If color bars are stable but live video tears, frame buffering is the more likely problem.
+Set switch 2 before programming the FPGA to select the camera's internal color bars. If color bars are also corrupted, the likely problem is wiring, timing or capture. If color bars are stable but live video has incorrect colors, the sensor/color setup is the more likely problem. If live video only tears, the shared frame buffer is the likely cause.
 
 ### 4. Clock and synchronization
 
@@ -108,6 +120,13 @@ Clock-domain crossings, frame boundaries and BRAM read latency must be handled c
    - 240 HREF pulses per frame
    - 640 camera bytes per active row
    - 76800 completed pixels per frame
+
+## Debug controls
+
+- Switch 0 inverts camera VSYNC interpretation.
+- Switch 1 swaps the two RGB565 bytes and should normally remain off.
+- Switch 2 selects camera color bars; set it before programming the FPGA.
+- LED 0 indicates that the register list was sent.
 
 ## Project modules
 

@@ -6,6 +6,7 @@
 module sccb_init (
     input clk,
     input reset,
+    input color_bar,
     output sioc,
     inout siod,
     output config_done
@@ -17,6 +18,7 @@ module sccb_init (
     ov7670_reg registers_inst (
         .clk(clk),
         .config_step(config_step),
+        .color_bar(color_bar),
         .command(command)
     );
 

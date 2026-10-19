@@ -11,8 +11,10 @@
 //   5 = VSYNC edge activity
 //   6 = HREF edge activity
 //
-// Switches: sw[0]=invert VSYNC, sw[1]=swap RGB bytes
-// Live video (COM7=0x14). sw[0]=invert VSYNC, sw[1]=swap bytes
+// Switches:
+//   sw[0] = invert camera VSYNC
+//   sw[1] = swap RGB565 bytes (normally OFF)
+//   sw[2] = camera color bars (set before programming the FPGA)
 
 module top_module (
     input         clk,
@@ -48,6 +50,7 @@ module top_module (
     sccb_init camera_setup (
         .clk(clk),
         .reset(1'b0),
+        .color_bar(sw[2]),
         .sioc(sioc),
         .siod(siod),
         .config_done(config_done)
