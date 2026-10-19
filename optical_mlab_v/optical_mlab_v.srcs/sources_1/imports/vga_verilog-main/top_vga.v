@@ -1,37 +1,43 @@
 `timescale 1ns / 1ps
 
-// FOR USE WITH AN FPGA THAT HAS 12 PINS FOR RGB VALUES, 4 PER COLOR
-
+// Simple VGA test for boards with 12 bit RGB (4 bits per color).
+// Shows a solid color from the switches.
 
 module vga_test(
-	input clk_100MHz,      // from FPGA
+	input clk_100MHz,
 	input reset,
-	input [11:0] sw,       // 12 bits for color
-	output hsync, 
+	input [11:0] sw,       // color from switches
+	output hsync,
 	output vsync,
-	output reg [11:0] rgb  // 12 FPGA pins for RGB(4 per color)
+	output reg [11:0] rgb
 );
-	
-	// Signal Declaration
-	reg [11:0] rgb_reg;    // Registar for displaying color on a screen
-	wire video_on;         // Same signal as in controller
 
-    // Instantiate VGA Controller
-    vga_controller vga_c(.clk_100MHz(clk_100MHz), .reset(reset), .hsync(hsync), .vsync(vsync),
-                         .video_on(video_on), .p_tick(), .x(), .y());
-    // RGB Buffer
+	reg [11:0] rgb_reg;
+	wire video_on;
+
+    vga_controller vga_c(
+        .clk_100MHz(clk_100MHz),
+        .reset(reset),
+        .hsync(hsync),
+        .vsync(vsync),
+        .video_on(video_on),
+        .p_tick(),
+        .x(),
+        .y()
+    );
+
     always @(posedge clk_100MHz or posedge reset)
     if (reset)
        rgb_reg <= 0;
     else
        rgb_reg <= sw;
-    
-    // Output: show switch color only in the visible display area
+
+    // only drive RGB inside the visible area
     always @(*) begin
         if (video_on)
-            rgb = rgb_reg;   // inside 640x480: drive color from switches
+            rgb = rgb_reg;
         else
-            rgb = 12'b0;     // blanking region: RGB off
+            rgb = 12'b0;
     end
-        
+
 endmodule

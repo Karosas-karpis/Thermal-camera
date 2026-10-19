@@ -21,7 +21,7 @@ set_property -dict { PACKAGE_PIN V2    IOSTANDARD LVCMOS33 } [get_ports {sw[8]}]
 set_property -dict { PACKAGE_PIN T3    IOSTANDARD LVCMOS33 } [get_ports {sw[9]}]
 set_property -dict { PACKAGE_PIN T2    IOSTANDARD LVCMOS33 } [get_ports {sw[10]}]
 set_property -dict { PACKAGE_PIN R3    IOSTANDARD LVCMOS33 } [get_ports {sw[11]}]
-# sw[12:15] not used — top_module only has input [11:0] sw
+# sw[12:15] not used, top only takes sw[11:0]
 #set_property -dict { PACKAGE_PIN W2    IOSTANDARD LVCMOS33 } [get_ports {sw[12]}]
 #set_property -dict { PACKAGE_PIN U1    IOSTANDARD LVCMOS33 } [get_ports {sw[13]}]
 #set_property -dict { PACKAGE_PIN T1    IOSTANDARD LVCMOS33 } [get_ports {sw[14]}]
@@ -72,35 +72,46 @@ set_property -dict { PACKAGE_PIN L1    IOSTANDARD LVCMOS33 } [get_ports {led[15]
 #set_property -dict { PACKAGE_PIN U17   IOSTANDARD LVCMOS33 } [get_ports btnD]
 
 
-##Pmod Header JA
-#set_property -dict { PACKAGE_PIN J1   IOSTANDARD LVCMOS33 } [get_ports {JA[0]}];#Sch name = JA1
-#set_property -dict { PACKAGE_PIN L2   IOSTANDARD LVCMOS33 } [get_ports {JA[1]}];#Sch name = JA2
-#set_property -dict { PACKAGE_PIN J2   IOSTANDARD LVCMOS33 } [get_ports {JA[2]}];#Sch name = JA3
-#set_property -dict { PACKAGE_PIN G2   IOSTANDARD LVCMOS33 } [get_ports {JA[3]}];#Sch name = JA4
-#set_property -dict { PACKAGE_PIN H1   IOSTANDARD LVCMOS33 } [get_ports {JA[4]}];#Sch name = JA7
-#set_property -dict { PACKAGE_PIN K2   IOSTANDARD LVCMOS33 } [get_ports {JA[5]}];#Sch name = JA8
-#set_property -dict { PACKAGE_PIN H2   IOSTANDARD LVCMOS33 } [get_ports {JA[6]}];#Sch name = JA9
-#set_property -dict { PACKAGE_PIN G3   IOSTANDARD LVCMOS33 } [get_ports {JA[7]}];#Sch name = JA10
+## OV7670 on JB + JC, matched to camera 2-row header.
+## Camera pins (right to left on both rows):
+##   3.3  SCL  VS   PLK  D7  D5  D3  D1  RET
+##   GND  SDA  HS   XLK  D6  D4  D2  D0  PWDN
+## Board bottom edge left to right is JB then JC.
 
-##Pmod Header JB
-#set_property -dict { PACKAGE_PIN A14   IOSTANDARD LVCMOS33 } [get_ports {JB[0]}];#Sch name = JB1
-#set_property -dict { PACKAGE_PIN A16   IOSTANDARD LVCMOS33 } [get_ports {JB[1]}];#Sch name = JB2
-#set_property -dict { PACKAGE_PIN B15   IOSTANDARD LVCMOS33 } [get_ports {JB[2]}];#Sch name = JB3
-#set_property -dict { PACKAGE_PIN B16   IOSTANDARD LVCMOS33 } [get_ports {JB[3]}];#Sch name = JB4
-#set_property -dict { PACKAGE_PIN A15   IOSTANDARD LVCMOS33 } [get_ports {JB[4]}];#Sch name = JB7
-#set_property -dict { PACKAGE_PIN A17   IOSTANDARD LVCMOS33 } [get_ports {JB[5]}];#Sch name = JB8
-#set_property -dict { PACKAGE_PIN C15   IOSTANDARD LVCMOS33 } [get_ports {JB[6]}];#Sch name = JB9
-#set_property -dict { PACKAGE_PIN C16   IOSTANDARD LVCMOS33 } [get_ports {JB[7]}];#Sch name = JB10
+## Pmod JA (unused)
+#set_property -dict { PACKAGE_PIN J1   IOSTANDARD LVCMOS33 } [get_ports {JA[0]}];# JA1
+#set_property -dict { PACKAGE_PIN L2   IOSTANDARD LVCMOS33 } [get_ports {JA[1]}];# JA2
+#set_property -dict { PACKAGE_PIN J2   IOSTANDARD LVCMOS33 } [get_ports {JA[2]}];# JA3
+#set_property -dict { PACKAGE_PIN G2   IOSTANDARD LVCMOS33 } [get_ports {JA[3]}];# JA4
+#set_property -dict { PACKAGE_PIN H1   IOSTANDARD LVCMOS33 } [get_ports {JA[4]}];# JA7
+#set_property -dict { PACKAGE_PIN K2   IOSTANDARD LVCMOS33 } [get_ports {JA[5]}];# JA8
+#set_property -dict { PACKAGE_PIN H2   IOSTANDARD LVCMOS33 } [get_ports {JA[6]}];# JA9
+#set_property -dict { PACKAGE_PIN G3   IOSTANDARD LVCMOS33 } [get_ports {JA[7]}];# JA10
 
-##Pmod Header JC
-#set_property -dict { PACKAGE_PIN K17   IOSTANDARD LVCMOS33 } [get_ports {JC[0]}];#Sch name = JC1
-#set_property -dict { PACKAGE_PIN M18   IOSTANDARD LVCMOS33 } [get_ports {JC[1]}];#Sch name = JC2
-#set_property -dict { PACKAGE_PIN N17   IOSTANDARD LVCMOS33 } [get_ports {JC[2]}];#Sch name = JC3
-#set_property -dict { PACKAGE_PIN P18   IOSTANDARD LVCMOS33 } [get_ports {JC[3]}];#Sch name = JC4
-#set_property -dict { PACKAGE_PIN L17   IOSTANDARD LVCMOS33 } [get_ports {JC[4]}];#Sch name = JC7
-#set_property -dict { PACKAGE_PIN M19   IOSTANDARD LVCMOS33 } [get_ports {JC[5]}];#Sch name = JC8
-#set_property -dict { PACKAGE_PIN P17   IOSTANDARD LVCMOS33 } [get_ports {JC[6]}];#Sch name = JC9
-#set_property -dict { PACKAGE_PIN R18   IOSTANDARD LVCMOS33 } [get_ports {JC[7]}];#Sch name = JC10
+## Pmod JB (left) - camera left side: RET/PWDN and D1/D0 D3/D2 D5/D4
+## Row toward board center = pins 1-4, row toward board edge = pins 7-10
+set_property -dict { PACKAGE_PIN A14  IOSTANDARD LVCMOS33 } [get_ports cam_reset];# JB1 - RET
+set_property -dict { PACKAGE_PIN A16  IOSTANDARD LVCMOS33 } [get_ports {d[1]}];# JB2 - D1
+set_property -dict { PACKAGE_PIN B15  IOSTANDARD LVCMOS33 } [get_ports {d[3]}];# JB3 - D3
+set_property -dict { PACKAGE_PIN B16  IOSTANDARD LVCMOS33 } [get_ports {d[5]}];# JB4 - D5
+set_property -dict { PACKAGE_PIN A15  IOSTANDARD LVCMOS33 } [get_ports pwdn];# JB7 - PWDN
+set_property -dict { PACKAGE_PIN A17  IOSTANDARD LVCMOS33 } [get_ports {d[0]}];# JB8 - D0
+set_property -dict { PACKAGE_PIN C15  IOSTANDARD LVCMOS33 } [get_ports {d[2]}];# JB9 - D2
+set_property -dict { PACKAGE_PIN C16  IOSTANDARD LVCMOS33 } [get_ports {d[4]}];# JB10 - D4
+
+## Pmod JC (right) - camera right side: D7/D6 PLK/XLK VS/HS SCL/SDA + 3.3/GND
+set_property -dict { PACKAGE_PIN K17  IOSTANDARD LVCMOS33 } [get_ports {d[7]}];# JC1 - D7
+set_property -dict { PACKAGE_PIN M18  IOSTANDARD LVCMOS33 } [get_ports pclk];# JC2 - PLK
+set_property -dict { PACKAGE_PIN N17  IOSTANDARD LVCMOS33 } [get_ports cam_vsync];# JC3 - VS
+set_property -dict { PACKAGE_PIN P18  IOSTANDARD LVCMOS33 } [get_ports sioc];# JC4 - SCL
+set_property -dict { PACKAGE_PIN L17  IOSTANDARD LVCMOS33 } [get_ports {d[6]}];# JC7 - D6
+set_property -dict { PACKAGE_PIN M19  IOSTANDARD LVCMOS33 } [get_ports xclk];# JC8 - XLK
+set_property -dict { PACKAGE_PIN P17  IOSTANDARD LVCMOS33 } [get_ports href];# JC9 - HS
+set_property -dict { PACKAGE_PIN R18  IOSTANDARD LVCMOS33 PULLUP TRUE } [get_ports siod];# JC10 - SDA
+
+## Camera pixel clock (typical ~10-25 MHz from OV7670)
+create_clock -period 40.000 -name pclk_pin -waveform {0.000 20.000} [get_ports pclk]
+set_clock_groups -asynchronous -group [get_clocks sys_clk_pin] -group [get_clocks pclk_pin]
 
 ##Pmod Header JXADC
 #set_property -dict { PACKAGE_PIN J3   IOSTANDARD LVCMOS33 } [get_ports {JXADC[0]}];#Sch name = XA1_P

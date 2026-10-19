@@ -1,8 +1,8 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
-| Tool Version : Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
-| Date         : Thu Oct 15 00:14:33 2026
-| Host         : DESKTOP-HCSQHRM running 64-bit major release  (build 9200)
+| Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
+| Date         : Mon Oct 19 17:40:49 2026
+| Host         : m-lenovo running 64-bit Linux Mint 22.3
 | Command      : report_control_sets -verbose -file top_module_control_sets_placed.rpt
 | Design       : top_module
 | Device       : xc7a35t
@@ -23,11 +23,11 @@ Table of Contents
 +----------------------------------------------------------+-------+
 |                          Status                          | Count |
 +----------------------------------------------------------+-------+
-| Total control sets                                       |     5 |
-|    Minimum number of control sets                        |     5 |
+| Total control sets                                       |    14 |
+|    Minimum number of control sets                        |    14 |
 |    Addition due to synthesis replication                 |     0 |
 |    Addition due to physical synthesis replication        |     0 |
-| Unused register locations in slices containing registers |    21 |
+| Unused register locations in slices containing registers |    52 |
 +----------------------------------------------------------+-------+
 * Control sets can be merged at opt_design using control_set_merge or merge_equivalent_drivers
 ** Run report_qor_suggestions for automated merging and remapping suggestions
@@ -39,14 +39,14 @@ Table of Contents
 +--------------------+-------+
 |       Fanout       | Count |
 +--------------------+-------+
-| Total control sets |     5 |
-| >= 0 to < 4        |     0 |
+| Total control sets |    14 |
+| >= 0 to < 4        |     1 |
 | >= 4 to < 6        |     0 |
-| >= 6 to < 8        |     0 |
-| >= 8 to < 10       |     0 |
+| >= 6 to < 8        |     1 |
+| >= 8 to < 10       |     5 |
 | >= 10 to < 12      |     2 |
-| >= 12 to < 14      |     0 |
-| >= 14 to < 16      |     0 |
+| >= 12 to < 14      |     1 |
+| >= 14 to < 16      |     1 |
 | >= 16              |     3 |
 +--------------------+-------+
 * Control sets can be remapped at either synth_design or opt_design
@@ -58,26 +58,35 @@ Table of Contents
 +--------------+-----------------------+------------------------+-----------------+--------------+
 | Clock Enable | Synchronous Set/Reset | Asynchronous Set/Reset | Total Registers | Total Slices |
 +--------------+-----------------------+------------------------+-----------------+--------------+
-| No           | No                    | No                     |              46 |           16 |
+| No           | No                    | No                     |             100 |           42 |
 | No           | No                    | Yes                    |               0 |            0 |
-| No           | Yes                   | No                     |              27 |            8 |
-| Yes          | No                    | No                     |              26 |           14 |
+| No           | Yes                   | No                     |               0 |            0 |
+| Yes          | No                    | No                     |              46 |           18 |
 | Yes          | No                    | Yes                    |               0 |            0 |
-| Yes          | Yes                   | No                     |               0 |            0 |
+| Yes          | Yes                   | No                     |              58 |           18 |
 +--------------+-----------------------+------------------------+-----------------+--------------+
 
 
 4. Detailed Control Set Information
 -----------------------------------
 
-+----------------------------+----------------------------------+-------------------+------------------+----------------+--------------+
-|        Clock Signal        |           Enable Signal          |  Set/Reset Signal | Slice Load Count | Bel Load Count | Bels / Slice |
-+----------------------------+----------------------------------+-------------------+------------------+----------------+--------------+
-|  vga_display/vga_c/w_25MHz |                                  |                   |                3 |             10 |         3.33 |
-|  vga_display/vga_c/w_25MHz | vga_display/vga_c/v_count_next_1 |                   |                3 |             10 |         3.33 |
-|  clk_IBUF_BUFG             | count[26]_i_1_n_0                |                   |               11 |             16 |         1.45 |
-|  clk_IBUF_BUFG             |                                  | count[26]_i_1_n_0 |                8 |             27 |         3.38 |
-|  clk_IBUF_BUFG             |                                  |                   |               13 |             36 |         2.77 |
-+----------------------------+----------------------------------+-------------------+------------------+----------------+--------------+
++-----------------+-------------------------------------------------+------------------------------------------------+------------------+----------------+--------------+
+|   Clock Signal  |                  Enable Signal                  |                Set/Reset Signal                | Slice Load Count | Bel Load Count | Bels / Slice |
++-----------------+-------------------------------------------------+------------------------------------------------+------------------+----------------+--------------+
+|  clk_IBUF_BUFG  | camera_setup/sender_inst/sioc3_out              |                                                |                1 |              1 |         1.00 |
+|  clk_IBUF_BUFG  | camera_setup/sender_inst/state                  |                                                |                3 |              6 |         2.00 |
+|  pclk_IBUF_BUFG | camera_capture/first_byte[7]_i_1_n_0            |                                                |                4 |              8 |         2.00 |
+|  pclk_IBUF_BUFG | camera_capture/row                              | camera_capture/row[7]_i_1_n_0                  |                4 |              8 |         2.00 |
+|  clk_IBUF_BUFG  | camera_setup/sender_inst/config_step[7]_i_1_n_0 |                                                |                1 |              8 |         8.00 |
+|  pclk_IBUF_BUFG | camera_capture/col[8]_i_2_n_0                   | camera_capture/RSTC                            |                2 |              9 |         4.50 |
+|  clk_IBUF_BUFG  | camera_setup/sender_inst/p_0_in_0               | camera_setup/sender_inst/clk_div               |                3 |              9 |         3.00 |
+|  vga_c/w_25MHz  |                                                 |                                                |                3 |             10 |         3.33 |
+|  vga_c/w_25MHz  | vga_c/v_count_next_1                            |                                                |                5 |             10 |         2.00 |
+|  pclk_IBUF_BUFG | camera_capture/wr_data[15]_i_1_n_0              |                                                |                4 |             13 |         3.25 |
+|  clk_IBUF_BUFG  | camera_setup/registers_inst/command_reg_1       | camera_setup/sender_inst/delay_cnt[15]_i_1_n_0 |                4 |             15 |         3.75 |
+|  pclk_IBUF_BUFG | camera_capture/wr_addr[16]_i_2_n_0              | camera_capture/RSTP                            |                5 |             17 |         3.40 |
+|  pclk_IBUF_BUFG |                                                 |                                                |               10 |             30 |         3.00 |
+|  clk_IBUF_BUFG  |                                                 |                                                |               29 |             60 |         2.07 |
++-----------------+-------------------------------------------------+------------------------------------------------+------------------+----------------+--------------+
 
 

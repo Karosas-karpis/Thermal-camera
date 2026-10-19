@@ -4,7 +4,7 @@
 
 set TIME_start [clock seconds] 
 namespace eval ::optrace {
-  variable script "C:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.runs/synth_1/top_module.tcl"
+  variable script "/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.runs/synth_1/top_module.tcl"
   variable category "vivado_synth"
 }
 
@@ -56,29 +56,39 @@ if {$::dispatch::connected} {
 }
 
 OPTRACE "synth_1" START { ROLLUP_AUTO }
-set_param chipscope.maxJobs 3
-set_param checkpoint.writeSynthRtdsInDcp 1
-set_msg_config -id {Synth 8-256} -limit 10000
-set_msg_config -id {Synth 8-638} -limit 10000
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7a35tcpg236-1
 
 set_param project.singleFileAddWarning.threshold 0
 set_param project.compositeFile.enableAutoGeneration 0
 set_param synth.vivado.isSynthRun true
-set_property webtalk.parent_dir C:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.cache/wt [current_project]
-set_property parent.project_path C:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.xpr [current_project]
+set_msg_config -source 4 -id {IP_Flow 19-2162} -severity warning -new_severity info
+set_property webtalk.parent_dir /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.cache/wt [current_project]
+set_property parent.project_path /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.xpr [current_project]
+set_property XPM_LIBRARIES {XPM_CDC XPM_MEMORY} [current_project]
 set_property default_lib xil_defaultlib [current_project]
 set_property target_language Verilog [current_project]
-set_property ip_output_repo c:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.cache/ip [current_project]
+set_property ip_output_repo /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.cache/ip [current_project]
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
 read_verilog -library xil_defaultlib {
-  C:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/imports/vga_verilog-main/top_vga.v
-  C:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/imports/vga_verilog-main/vga_controler.v
-  C:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/top_module.v
+  /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/i2c_send.v
+  /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/ov7670.v
+  /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/ov7670_reg.v
+  /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/sccb_init.v
+  /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/imports/vga_verilog-main/vga_controler.v
+  /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/top_module.v
 }
+read_ip -quiet /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/ip/cam_xclk/cam_xclk.xci
+set_property used_in_implementation false [get_files -all /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.gen/sources_1/ip/cam_xclk/cam_xclk_board.xdc]
+set_property used_in_implementation false [get_files -all /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.gen/sources_1/ip/cam_xclk/cam_xclk.xdc]
+set_property used_in_implementation false [get_files -all /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.gen/sources_1/ip/cam_xclk/cam_xclk_late.xdc]
+set_property used_in_implementation false [get_files -all /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.gen/sources_1/ip/cam_xclk/cam_xclk_ooc.xdc]
+
+read_ip -quiet /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/ip/blk_mem_gen_0/blk_mem_gen_0.xci
+set_property used_in_implementation false [get_files -all /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.gen/sources_1/ip/blk_mem_gen_0/blk_mem_gen_0_ooc.xdc]
+
 OPTRACE "Adding files" END { }
 # Mark all dcp files as not used in implementation to prevent them from being
 # stitched into the results of this synthesis run. Any black boxes in the
@@ -88,12 +98,14 @@ OPTRACE "Adding files" END { }
 foreach dcp [get_files -quiet -all -filter file_type=="Design\ Checkpoint"] {
   set_property used_in_implementation false $dcp
 }
-read_xdc C:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/constrs_1/imports/Downloads/Basys-3-Master.xdc
-set_property used_in_implementation false [get_files C:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/constrs_1/imports/Downloads/Basys-3-Master.xdc]
+read_xdc /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/constrs_1/imports/Downloads/Basys-3-Master.xdc
+set_property used_in_implementation false [get_files /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/constrs_1/imports/Downloads/Basys-3-Master.xdc]
 
+read_xdc dont_touch.xdc
+set_property used_in_implementation false [get_files dont_touch.xdc]
 set_param ips.enableIPCacheLiteLoad 1
 
-read_checkpoint -auto_incremental -incremental C:/Users/klima/Documents/GitHUBCLICLI/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/utils_1/imports/synth_1/top_module.dcp
+read_checkpoint -auto_incremental -incremental /home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/utils_1/imports/synth_1/top_module.dcp
 close [open __synthesis_is_running__ w]
 
 OPTRACE "synth_design" START { }
