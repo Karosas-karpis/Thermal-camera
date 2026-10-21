@@ -150,7 +150,7 @@ module top_module (
             else
                 vga_rgb <= 12'd0;
         end else if (video_on) begin
-            vga_rgb <= {rd_data[15:12], rd_data[10:7], rd_data[4:1]};
+            vga_rgb <= {rd_data[4:1], rd_data[10:7], rd_data[15:12]};
         end else begin
             vga_rgb <= 12'd0;
         end
