@@ -7,9 +7,11 @@ module sccb_init (
     input clk,
     input reset,
     input color_bar,
-    output sioc,
+    input rgb555,
+    inout sioc,
     inout siod,
-    output config_done
+    output config_done,
+    output ack_error
 );
 
     wire [7:0] config_step;
@@ -19,6 +21,7 @@ module sccb_init (
         .clk(clk),
         .config_step(config_step),
         .color_bar(color_bar),
+        .rgb555(rgb555),
         .command(command)
     );
 
@@ -29,7 +32,8 @@ module sccb_init (
         .config_step(config_step),
         .sioc(sioc),
         .siod(siod),
-        .done(config_done)
+        .done(config_done),
+        .ack_error(ack_error)
     );
 
 endmodule

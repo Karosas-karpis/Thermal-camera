@@ -1,12 +1,13 @@
 `timescale 1ns / 1ps
 
-// QVGA RGB565 init (based on known-good MIT / community lists).
+// QVGA RGB565/RGB555 init (based on known-good MIT / community lists).
 // 16'hFFFE = wait, 16'hFFFF = end
 
 module ov7670_reg (
     input clk,
     input [7:0] config_step,
     input color_bar,
+    input rgb555,
     output reg [15:0] command
 );
 
@@ -21,7 +22,7 @@ module ov7670_reg (
             8'd5:  command <= 16'h3E_00; // COM14 normal pclk
             8'd6:  command <= 16'h04_00; // COM1
             8'd7:  command <= 16'h8C_00; // disable RGB444
-            8'd8:  command <= 16'h40_D0; // COM15 RGB565, full range
+            8'd8:  command <= rgb555 ? 16'h40_F0 : 16'h40_D0; // COM15 RGB555/RGB565, full range
             8'd9:  command <= 16'h3A_04; // TSLB
             8'd10: command <= 16'h14_18; // COM9, 4x gain ceiling
             8'd11: command <= 16'h4F_B3; // RGB565 color matrix
@@ -117,7 +118,7 @@ module ov7670_reg (
             8'd95: command <= 16'h13_E7; // AGC + AWB + AEC
 
             // Reassert the selected format after all tuning writes.
-            8'd96: command <= 16'h40_D0;
+            8'd96: command <= rgb555 ? 16'h40_F0 : 16'h40_D0;
             8'd97: command <= color_bar ? 16'h12_16 : 16'h12_14;
 
             // COM2: 1x output drive for ~10 cm jumpers (default is 2x).

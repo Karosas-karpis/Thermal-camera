@@ -103,7 +103,7 @@ set_property -dict { PACKAGE_PIN C16  IOSTANDARD LVCMOS33 } [get_ports {d[4]}];#
 set_property -dict { PACKAGE_PIN K17  IOSTANDARD LVCMOS33 } [get_ports {d[7]}];# JC1 - D7
 set_property -dict { PACKAGE_PIN M18  IOSTANDARD LVCMOS33 } [get_ports pclk];# JC2 - PLK
 set_property -dict { PACKAGE_PIN N17  IOSTANDARD LVCMOS33 } [get_ports cam_vsync];# JC3 - VS
-set_property -dict { PACKAGE_PIN P18  IOSTANDARD LVCMOS33 } [get_ports sioc];# JC4 - SCL
+set_property -dict { PACKAGE_PIN P18  IOSTANDARD LVCMOS33 PULLUP TRUE } [get_ports sioc];# JC4 - SCL
 set_property -dict { PACKAGE_PIN L17  IOSTANDARD LVCMOS33 } [get_ports {d[6]}];# JC7 - D6
 set_property -dict { PACKAGE_PIN M19  IOSTANDARD LVCMOS33 } [get_ports xclk];# JC8 - XLK
 set_property -dict { PACKAGE_PIN P17  IOSTANDARD LVCMOS33 } [get_ports href];# JC9 - HS

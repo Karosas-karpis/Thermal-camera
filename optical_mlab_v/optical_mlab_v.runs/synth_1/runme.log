@@ -7,7 +7,7 @@
   **** SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
   **** IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
   **** SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-  **** Start of session at: Mon Oct 19 17:39:30 2026
+  **** Start of session at: Thu Oct 22 17:00:53 2026
     ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
     ** Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 
@@ -24,11 +24,11 @@ INFO: [Designutils 20-5440] No compile time benefit to using incremental synthes
 INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
 INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 7 processes.
 INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
-INFO: [Synth 8-7075] Helper process launched with PID 157624
+INFO: [Synth 8-7075] Helper process launched with PID 142146
 ---------------------------------------------------------------------------------
-Starting RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:05 . Memory (MB): peak = 1881.309 ; gain = 420.797 ; free physical = 2697 ; free virtual = 6759
+Starting RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:05 . Memory (MB): peak = 1880.562 ; gain = 418.797 ; free physical = 744 ; free virtual = 6186
 ---------------------------------------------------------------------------------
-INFO: [Synth 8-6157] synthesizing module 'top_module' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/top_module.v:17]
+INFO: [Synth 8-6157] synthesizing module 'top_module' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/top_module.v:22]
 INFO: [Synth 8-6157] synthesizing module 'cam_xclk' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.gen/sources_1/ip/cam_xclk/cam_xclk.v:65]
 INFO: [Synth 8-6157] synthesizing module 'cam_xclk_clk_wiz' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.gen/sources_1/ip/cam_xclk/cam_xclk_clk_wiz.v:65]
 INFO: [Synth 8-6157] synthesizing module 'MMCME2_ADV' [/home/mantvydas/vivado/Vivado/2024.2/scripts/rt/data/unisim_comp.v:84588]
@@ -53,17 +53,16 @@ INFO: [Synth 8-6155] done synthesizing module 'cam_xclk' (0#1) [/home/mantvydas/
 INFO: [Synth 8-6157] synthesizing module 'sccb_init' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/sccb_init.v:6]
 INFO: [Synth 8-6157] synthesizing module 'ov7670_reg' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/ov7670_reg.v:6]
 INFO: [Synth 8-6155] done synthesizing module 'ov7670_reg' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/ov7670_reg.v:6]
-INFO: [Synth 8-6157] synthesizing module 'i2c_sender' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/i2c_send.v:9]
-INFO: [Synth 8-155] case statement is not full and has no default [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/i2c_send.v:67]
-INFO: [Synth 8-6155] done synthesizing module 'i2c_sender' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/i2c_send.v:9]
+INFO: [Synth 8-6157] synthesizing module 'i2c_sender' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/i2c_send.v:10]
+INFO: [Synth 8-6155] done synthesizing module 'i2c_sender' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/i2c_send.v:10]
 INFO: [Synth 8-6155] done synthesizing module 'sccb_init' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/sccb_init.v:6]
 INFO: [Synth 8-6157] synthesizing module 'ov7670' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/ov7670.v:10]
 INFO: [Synth 8-6155] done synthesizing module 'ov7670' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/ov7670.v:10]
-INFO: [Synth 8-6157] synthesizing module 'vga_controller' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/imports/vga_verilog-main/vga_controler.v:6]
-INFO: [Synth 8-6155] done synthesizing module 'vga_controller' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/imports/vga_verilog-main/vga_controler.v:6]
-INFO: [Synth 8-6157] synthesizing module 'blk_mem_gen_0' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.runs/synth_1/.Xil/Vivado-157542-m-lenovo/realtime/blk_mem_gen_0_stub.v:6]
-INFO: [Synth 8-6155] done synthesizing module 'blk_mem_gen_0' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.runs/synth_1/.Xil/Vivado-157542-m-lenovo/realtime/blk_mem_gen_0_stub.v:6]
-INFO: [Synth 8-6155] done synthesizing module 'top_module' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/top_module.v:17]
+INFO: [Synth 8-6157] synthesizing module 'vga_controller' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/imports/vga_verilog-main/vga_controler.v:11]
+INFO: [Synth 8-6155] done synthesizing module 'vga_controller' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/imports/vga_verilog-main/vga_controler.v:11]
+INFO: [Synth 8-6157] synthesizing module 'blk_mem_gen_0' [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.runs/synth_1/.Xil/Vivado-142069-m-lenovo/realtime/blk_mem_gen_0_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'blk_mem_gen_0' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.runs/synth_1/.Xil/Vivado-142069-m-lenovo/realtime/blk_mem_gen_0_stub.v:6]
+INFO: [Synth 8-6155] done synthesizing module 'top_module' (0#1) [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.srcs/sources_1/new/top_module.v:22]
 WARNING: [Synth 8-3917] design top_module has port led[15] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[14] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[13] driven by constant 0
@@ -72,22 +71,21 @@ WARNING: [Synth 8-3917] design top_module has port led[11] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[10] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[9] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[8] driven by constant 0
-WARNING: [Synth 8-3917] design top_module has port led[7] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port cam_reset driven by constant 1
 WARNING: [Synth 8-3917] design top_module has port pwdn driven by constant 0
 ---------------------------------------------------------------------------------
-Finished RTL Elaboration : Time (s): cpu = 00:00:06 ; elapsed = 00:00:06 . Memory (MB): peak = 1958.246 ; gain = 497.734 ; free physical = 2606 ; free virtual = 6670
+Finished RTL Elaboration : Time (s): cpu = 00:00:06 ; elapsed = 00:00:06 . Memory (MB): peak = 1959.500 ; gain = 497.734 ; free physical = 649 ; free virtual = 6093
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:06 ; elapsed = 00:00:06 . Memory (MB): peak = 1976.059 ; gain = 515.547 ; free physical = 2606 ; free virtual = 6670
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:06 ; elapsed = 00:00:06 . Memory (MB): peak = 1974.344 ; gain = 512.578 ; free physical = 661 ; free virtual = 6105
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:06 ; elapsed = 00:00:06 . Memory (MB): peak = 1976.059 ; gain = 515.547 ; free physical = 2606 ; free virtual = 6670
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:06 ; elapsed = 00:00:06 . Memory (MB): peak = 1974.344 ; gain = 512.578 ; free physical = 661 ; free virtual = 6105
 ---------------------------------------------------------------------------------
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 1981.996 ; gain = 0.000 ; free physical = 2599 ; free virtual = 6662
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 1977.312 ; gain = 0.000 ; free physical = 661 ; free virtual = 6105
 INFO: [Netlist 29-17] Analyzing 1 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
@@ -113,23 +111,23 @@ Parsing XDC File [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optic
 Finished Parsing XDC File [/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.gen/sources_1/ip/cam_xclk/cam_xclk_late.xdc] for cell 'cam_clock/inst'
 Completed Processing XDC Constraints
 
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2111.805 ; gain = 0.000 ; free physical = 2614 ; free virtual = 6678
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2094.090 ; gain = 0.000 ; free physical = 663 ; free virtual = 6107
 INFO: [Project 1-111] Unisim Transformation Summary:
 No Unisim elements were transformed.
 
-Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2111.805 ; gain = 0.000 ; free physical = 2614 ; free virtual = 6678
+Constraint Validation Runtime : Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 2094.090 ; gain = 0.000 ; free physical = 663 ; free virtual = 6107
 WARNING: [Timing 38-316] Clock period '20.000' specified during out-of-context synthesis of instance 'frame_buf' at clock pin 'clkb' is different from the actual clock period '10.000', this can lead to different synthesis results.
 INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
 INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 2111.805 ; gain = 651.293 ; free physical = 2669 ; free virtual = 6733
+Finished Constraint Validation : Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 2094.090 ; gain = 632.324 ; free physical = 687 ; free virtual = 6131
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7a35tcpg236-1
 ---------------------------------------------------------------------------------
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 2119.809 ; gain = 659.297 ; free physical = 2669 ; free virtual = 6733
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 2102.094 ; gain = 640.328 ; free physical = 687 ; free virtual = 6131
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying 'set_property' XDC Constraints
@@ -139,39 +137,67 @@ Applied set_property KEEP_HIERARCHY = SOFT for cam_clock/inst. (constraint file 
 Applied set_property KEEP_HIERARCHY = SOFT for cam_clock. (constraint file  auto generated constraint).
 Applied set_property KEEP_HIERARCHY = SOFT for frame_buf. (constraint file  auto generated constraint).
 ---------------------------------------------------------------------------------
-Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 2119.809 ; gain = 659.297 ; free physical = 2669 ; free virtual = 6733
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 2102.094 ; gain = 640.328 ; free physical = 687 ; free virtual = 6131
 ---------------------------------------------------------------------------------
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'i2c_sender'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                 POWERUP |                    0000000000001 |                            00000
+                    IDLE |                    0000000000010 |                            00001
+              RESET_WAIT |                    0000000000100 |                            01100
+              START_HOLD |                    0000000001000 |                            00010
+                 BIT_LOW |                    0000000010000 |                            00011
+               BIT_SETUP |                    0000000100000 |                            00100
+                BIT_HIGH |                    0000001000000 |                            00101
+                BIT_HOLD |                    0000010000000 |                            00110
+                BIT_FALL |                    0000100000000 |                            00111
+               STOP_DATA |                    0001000000000 |                            01000
+              STOP_CLOCK |                    0010000000000 |                            01001
+            STOP_RELEASE |                    0100000000000 |                            01010
+                 BUS_GAP |                    1000000000000 |                            01011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'one-hot' in module 'i2c_sender'
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2119.809 ; gain = 659.297 ; free physical = 2676 ; free virtual = 6742
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2102.094 ; gain = 640.328 ; free physical = 687 ; free virtual = 6133
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start RTL Component Statistics 
 ---------------------------------------------------------------------------------
 Detailed RTL Component Info : 
 +---Adders : 
-	   2 Input   16 Bit       Adders := 1     
+	   2 Input   18 Bit       Adders := 1     
 	   2 Input   10 Bit       Adders := 2     
 	   2 Input    9 Bit       Adders := 3     
-	   2 Input    8 Bit       Adders := 4     
-	   2 Input    3 Bit       Adders := 1     
+	   2 Input    8 Bit       Adders := 3     
+	   2 Input    5 Bit       Adders := 1     
+	   2 Input    4 Bit       Adders := 1     
 	   2 Input    2 Bit       Adders := 1     
 +---XORs : 
 	   2 Input      1 Bit         XORs := 3     
 +---Registers : 
-	               16 Bit    Registers := 3     
+	               24 Bit    Registers := 1     
+	               18 Bit    Registers := 1     
+	               16 Bit    Registers := 2     
 	               12 Bit    Registers := 1     
 	               10 Bit    Registers := 4     
 	                9 Bit    Registers := 2     
-	                8 Bit    Registers := 4     
+	                8 Bit    Registers := 3     
+	                5 Bit    Registers := 1     
+	                4 Bit    Registers := 1     
 	                2 Bit    Registers := 1     
 	                1 Bit    Registers := 24    
-+---ROMs : 
-	                    ROMs := 1     
 +---Muxes : 
-	   2 Input   16 Bit        Muxes := 1     
-	   2 Input   12 Bit        Muxes := 3     
-	   2 Input    1 Bit        Muxes := 33    
-	  13 Input    1 Bit        Muxes := 5     
+	  13 Input   24 Bit        Muxes := 1     
+	  13 Input   18 Bit        Muxes := 1     
+	   2 Input   16 Bit        Muxes := 2     
+	  13 Input   13 Bit        Muxes := 1     
+	   2 Input   13 Bit        Muxes := 2     
+	   2 Input   12 Bit        Muxes := 6     
+	  13 Input    5 Bit        Muxes := 1     
+	  13 Input    4 Bit        Muxes := 1     
+	   2 Input    1 Bit        Muxes := 16    
+	  13 Input    1 Bit        Muxes := 12    
 ---------------------------------------------------------------------------------
 Finished RTL Component Statistics 
 ---------------------------------------------------------------------------------
@@ -188,7 +214,6 @@ Finished Part Resource Summary
 Start Cross Boundary and Area Optimization
 ---------------------------------------------------------------------------------
 WARNING: [Synth 8-7080] Parallel synthesis criteria is not met
-WARNING: [Synth 8-6040] Register camera_setup/sender_inst/config_step_reg_rep driving address of a ROM cannot be packed in BRAM/URAM because of presence of initial value.
 WARNING: [Synth 8-3917] design top_module has port led[15] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[14] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[13] driven by constant 0
@@ -197,44 +222,28 @@ WARNING: [Synth 8-3917] design top_module has port led[11] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[10] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[9] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port led[8] driven by constant 0
-WARNING: [Synth 8-3917] design top_module has port led[7] driven by constant 0
 WARNING: [Synth 8-3917] design top_module has port cam_reset driven by constant 1
 WARNING: [Synth 8-3917] design top_module has port pwdn driven by constant 0
 ---------------------------------------------------------------------------------
-Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:16 ; elapsed = 00:00:16 . Memory (MB): peak = 2119.809 ; gain = 659.297 ; free physical = 2655 ; free virtual = 6730
----------------------------------------------------------------------------------
----------------------------------------------------------------------------------
-Start ROM, RAM, DSP, Shift Register and Retiming Reporting
----------------------------------------------------------------------------------
-
-ROM: Preliminary Mapping Report
-+------------+-----------------------------------------+---------------+----------------+
-|Module Name | RTL Object                              | Depth x Width | Implemented As | 
-+------------+-----------------------------------------+---------------+----------------+
-|top_module  | camera_setup/registers_inst/command_reg | 256x16        | Block RAM      | 
-+------------+-----------------------------------------+---------------+----------------+
-
----------------------------------------------------------------------------------
-Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:16 ; elapsed = 00:00:17 . Memory (MB): peak = 2102.094 ; gain = 640.328 ; free physical = 655 ; free virtual = 6111
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying XDC Timing Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:21 ; elapsed = 00:00:22 . Memory (MB): peak = 2142.809 ; gain = 682.297 ; free physical = 2578 ; free virtual = 6653
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:22 ; elapsed = 00:00:23 . Memory (MB): peak = 2144.094 ; gain = 682.328 ; free physical = 578 ; free virtual = 6034
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Timing Optimization
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:00:23 ; elapsed = 00:00:23 . Memory (MB): peak = 2195.855 ; gain = 735.344 ; free physical = 2524 ; free virtual = 6599
+Finished Timing Optimization : Time (s): cpu = 00:00:24 ; elapsed = 00:00:24 . Memory (MB): peak = 2183.141 ; gain = 721.375 ; free physical = 539 ; free virtual = 5995
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Technology Mapping
 ---------------------------------------------------------------------------------
-INFO: [Synth 8-7052] The timing for the instance camera_setup/registers_inst/command_reg (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:00:23 ; elapsed = 00:00:23 . Memory (MB): peak = 2195.855 ; gain = 735.344 ; free physical = 2524 ; free virtual = 6599
+Finished Technology Mapping : Time (s): cpu = 00:00:24 ; elapsed = 00:00:25 . Memory (MB): peak = 2191.148 ; gain = 729.383 ; free physical = 531 ; free virtual = 5987
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start IO Insertion
@@ -252,37 +261,37 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2321.668 ; gain = 861.156 ; free physical = 2422 ; free virtual = 6499
+Finished IO Insertion : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2321.961 ; gain = 860.195 ; free physical = 424 ; free virtual = 5880
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2321.668 ; gain = 861.156 ; free physical = 2422 ; free virtual = 6499
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2321.961 ; gain = 860.195 ; free physical = 424 ; free virtual = 5880
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Rebuilding User Hierarchy
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2321.668 ; gain = 861.156 ; free physical = 2422 ; free virtual = 6499
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2321.961 ; gain = 860.195 ; free physical = 424 ; free virtual = 5880
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Ports
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Ports : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2321.668 ; gain = 861.156 ; free physical = 2422 ; free virtual = 6499
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2321.961 ; gain = 860.195 ; free physical = 424 ; free virtual = 5880
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2324.637 ; gain = 864.125 ; free physical = 2422 ; free virtual = 6499
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2321.961 ; gain = 860.195 ; free physical = 424 ; free virtual = 5880
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Nets
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Nets : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2324.637 ; gain = 864.125 ; free physical = 2422 ; free virtual = 6499
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2321.961 ; gain = 860.195 ; free physical = 424 ; free virtual = 5880
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Writing Synthesis Report
@@ -301,44 +310,47 @@ Report Cell Usage:
 +------+------------+------+
 |1     |blk_mem_gen |     1|
 |2     |BUFG        |     4|
-|3     |CARRY4      |    22|
-|4     |LUT1        |     9|
-|5     |LUT2        |    39|
-|6     |LUT3        |    32|
-|7     |LUT4        |    43|
-|8     |LUT5        |    32|
-|9     |LUT6        |    47|
+|3     |CARRY4      |    23|
+|4     |LUT1        |    13|
+|5     |LUT2        |    45|
+|6     |LUT3        |    49|
+|7     |LUT4        |    52|
+|8     |LUT5        |    48|
+|9     |LUT6        |   104|
 |10    |MMCME2_ADV  |     1|
-|11    |RAMB18E1    |     1|
-|12    |FDRE        |   199|
-|13    |IBUF        |    24|
-|14    |OBUF        |    34|
-|15    |OBUFT       |     1|
+|11    |MUXF7       |     5|
+|12    |FDRE        |   241|
+|13    |FDSE        |    16|
+|14    |IBUF        |    24|
+|15    |IOBUF       |     1|
+|16    |OBUF        |    33|
+|17    |OBUFT       |     1|
 +------+------------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2324.637 ; gain = 864.125 ; free physical = 2422 ; free virtual = 6499
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2321.961 ; gain = 860.195 ; free physical = 424 ; free virtual = 5880
 ---------------------------------------------------------------------------------
-Synthesis finished with 0 errors, 0 critical warnings and 13 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:00:25 ; elapsed = 00:00:25 . Memory (MB): peak = 2324.637 ; gain = 728.379 ; free physical = 2422 ; free virtual = 6499
-Synthesis Optimization Complete : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2324.645 ; gain = 864.125 ; free physical = 2422 ; free virtual = 6499
+Synthesis finished with 0 errors, 0 critical warnings and 11 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2321.961 ; gain = 740.449 ; free physical = 424 ; free virtual = 5880
+Synthesis Optimization Complete : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2321.969 ; gain = 860.195 ; free physical = 424 ; free virtual = 5880
 INFO: [Project 1-571] Translating synthesized netlist
-Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 2324.645 ; gain = 0.000 ; free physical = 2422 ; free virtual = 6499
-INFO: [Netlist 29-17] Analyzing 24 Unisim elements for replacement
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2321.969 ; gain = 0.000 ; free physical = 424 ; free virtual = 5880
+INFO: [Netlist 29-17] Analyzing 30 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2380.664 ; gain = 0.000 ; free physical = 2546 ; free virtual = 6621
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2377.988 ; gain = 0.000 ; free physical = 511 ; free virtual = 5967
 INFO: [Project 1-111] Unisim Transformation Summary:
-No Unisim elements were transformed.
+  A total of 1 instances were transformed.
+  IOBUF => IOBUF (IBUF, OBUFT): 1 instance 
 
-Synth Design complete | Checksum: 7c0ff963
+Synth Design complete | Checksum: 78050579
 INFO: [Common 17-83] Releasing license: Synthesis
-49 Infos, 25 Warnings, 0 Critical Warnings and 0 Errors encountered.
+49 Infos, 22 Warnings, 0 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:00:34 ; elapsed = 00:00:33 . Memory (MB): peak = 2380.664 ; gain = 1006.691 ; free physical = 2546 ; free virtual = 6621
-INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 1543.816; main = 1543.816; forked = 270.372
-INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3044.250; main = 2380.668; forked = 924.438
-Write ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 2404.676 ; gain = 0.000 ; free physical = 2545 ; free virtual = 6621
+synth_design: Time (s): cpu = 00:00:36 ; elapsed = 00:00:34 . Memory (MB): peak = 2377.988 ; gain = 968.887 ; free physical = 511 ; free virtual = 5967
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 1522.190; main = 1522.190; forked = 271.574
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3026.535; main = 2377.992; forked = 924.438
+Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2402.000 ; gain = 8.004 ; free physical = 510 ; free virtual = 5966
 INFO: [Common 17-1381] The checkpoint '/home/mantvydas/Dokumentai/Thermal-camera/optical_mlab_v/optical_mlab_v.runs/synth_1/top_module.dcp' has been generated.
 INFO: [Vivado 12-24828] Executing command : report_utilization -file top_module_utilization_synth.rpt -pb top_module_utilization_synth.pb
-INFO: [Common 17-206] Exiting Vivado at Mon Oct 19 17:40:07 2026...
+INFO: [Common 17-206] Exiting Vivado at Thu Oct 22 17:01:32 2026...

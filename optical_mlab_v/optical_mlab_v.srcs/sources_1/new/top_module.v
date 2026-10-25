@@ -10,11 +10,14 @@
 //   4 = write activity
 //   5 = VSYNC edge activity
 //   6 = HREF edge activity
+//   7 = SCCB NACK/error (sticky)
 //
 // Switches:
 //   sw[0] = invert camera VSYNC
-//   sw[1] = swap RGB565 bytes (normally OFF)
+//   sw[1] = swap captured pixel bytes (normally OFF)
 //   sw[2] = camera color bars (set before programming the FPGA)
+//   sw[3] = swap R/B on VGA (OFF = datasheet RGB565, ON = old colour-fix mapping)
+//   sw[4] = RGB format (OFF = RGB565, ON = alternate RGB555; set before programming)
 
 module top_module (
     input         clk,
@@ -31,13 +34,14 @@ module top_module (
     input         cam_vsync,
     input         href,
     input  [7:0]  d,
-    output        sioc,
+    inout         sioc,
     inout         siod,
     output        cam_reset,
     output        pwdn
 );
 
     wire config_done;
+    wire sccb_ack_error;
 
     assign pwdn      = 1'b0;
     assign cam_reset = 1'b1;
@@ -51,9 +55,11 @@ module top_module (
         .clk(clk),
         .reset(1'b0),
         .color_bar(sw[2]),
+        .rgb555(sw[4]),
         .sioc(sioc),
         .siod(siod),
-        .config_done(config_done)
+        .config_done(config_done),
+        .ack_error(sccb_ack_error)
     );
 
     wire [16:0] wr_addr;
@@ -109,7 +115,8 @@ module top_module (
     assign led[4] = w_edge_led;    // writes
     assign led[5] = v_edge_led;    // VSYNC edges
     assign led[6] = h_edge_led;    // HREF edges
-    assign led[15:7] = 9'd0;
+    assign led[7] = sccb_ack_error; // at least one SCCB NACK
+    assign led[15:8] = 8'd0;
 
     wire       video_on;
     wire [9:0] vga_x;
@@ -150,7 +157,18 @@ module top_module (
             else
                 vga_rgb <= 12'd0;
         end else if (video_on) begin
-            vga_rgb <= {rd_data[4:1], rd_data[10:7], rd_data[15:12]};
+            // Convert selected camera format to RGB444. sw[3] swaps R/B.
+            if (sw[4]) begin
+                if (sw[3])
+                    vga_rgb <= {rd_data[4:1], rd_data[9:6], rd_data[14:11]};
+                else
+                    vga_rgb <= {rd_data[14:11], rd_data[9:6], rd_data[4:1]};
+            end else begin
+                if (sw[3])
+                    vga_rgb <= {rd_data[4:1], rd_data[10:7], rd_data[15:12]};
+                else
+                    vga_rgb <= {rd_data[15:12], rd_data[10:7], rd_data[4:1]};
+            end
         end else begin
             vga_rgb <= 12'd0;
         end
