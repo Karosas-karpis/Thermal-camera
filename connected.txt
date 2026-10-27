@@ -1,0 +1,12 @@
+basys pmod - thermal board
+
+ja6/ja12 3.3 - vcc
+ja5/ja11 gnd - gnd
+ja1 - clk
+ja2 - mosi
+ja3 - miso
+ja4 - ss
+ja7 - scl
+ja8 - sda
+ja9 - reset
+ja10 - ready

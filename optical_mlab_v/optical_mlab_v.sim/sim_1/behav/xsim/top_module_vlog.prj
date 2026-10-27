@@ -1,0 +1,17 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  --include "../../../../optical_mlab_v.ip_user_files/ipstatic" \
+"../../../../optical_mlab_v.gen/sources_1/ip/blk_mem_gen_0/sim/blk_mem_gen_0.v" \
+"../../../../optical_mlab_v.gen/sources_1/ip/cam_xclk/cam_xclk_clk_wiz.v" \
+"../../../../optical_mlab_v.gen/sources_1/ip/cam_xclk/cam_xclk.v" \
+"../../../../optical_mlab_v.srcs/sources_1/new/i2c_send.v" \
+"../../../../optical_mlab_v.srcs/sources_1/new/ov7670.v" \
+"../../../../optical_mlab_v.srcs/sources_1/new/ov7670_reg.v" \
+"../../../../optical_mlab_v.srcs/sources_1/new/sccb_init.v" \
+"../../../../optical_mlab_v.srcs/sources_1/imports/vga_verilog-main/vga_controler.v" \
+"../../../../optical_mlab_v.srcs/sources_1/new/top_module.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
