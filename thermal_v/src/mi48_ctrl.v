@@ -134,7 +134,10 @@ module mi48_ctrl #(
 
                 S_POLL_CHECK: begin
                     count <= 26'd0;
-                    state <= last_rd[5] ? S_POLL_GAP : S_TYPE;
+                    if (last_rd[5])
+                        state <= S_POLL_GAP;
+                    else
+                        state <= S_TYPE;
                 end
 
                 S_POLL_GAP: begin

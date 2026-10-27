@@ -1,8 +1,9 @@
 `timescale 1ns / 1ps
 
 // Part 1 preview: nearest-neighbour 7x upscale (80x62 -> 560x434), centred on
-// 640x480, auto-ranged grayscale (white = hot). Range is the frame min/max
-// reduced to a power-of-two shift so no divider is needed.
+// 640x480, auto-ranged. Colour (black-blue-purple-red-yellow-white, hot = white)
+// or grayscale. Range is the frame min/max reduced to a power-of-two shift so no
+// divider is needed.
 // Pipeline: coords -> thermal x/y -> RAM address -> RAM data -> RGB (4 clk = 1 VGA pixel).
 
 module thermal_view (
@@ -16,6 +17,7 @@ module thermal_view (
     input             mirror_x,
     input             flip_y,
     input             fixed_range,    // 15.0 .. 40.5 C instead of frame min/max
+    input             gray,           // grayscale instead of colour palette
     output reg [12:0] rd_addr = 13'd0,
     input      [15:0] rd_data,
     output reg [11:0] rgb = 12'd0
@@ -47,36 +49,87 @@ module thermal_view (
     reg [3:0]  shift_q = 4'd0;
     reg        left_q  = 1'b0;
 
-    // Shift (t_max - t_min) so its top bit lands on bit 3. The coldest pixel
-    // is black and the hottest is shade 8..15 of the 16 VGA grays.
-    wire [15:0] range = (t_max > t_min) ? (t_max - t_min) : 16'd1;
+    // Shift (t_max - t_min) so its top bit lands on bit 5. The coldest pixel
+    // is level 0 and the hottest is level 32..63 of 64.
+    reg  [15:0] range;
     reg  [3:0]  msb_n;
     integer b;
     always @(*) begin
+        if (t_max > t_min)
+            range = t_max - t_min;
+        else
+            range = 16'd1;
+
         msb_n = 4'd0;
         for (b = 0; b < 16; b = b + 1)
             if (range[b])
                 msb_n = b;
     end
 
-    wire [15:0] diff   = (rd_data > min_q) ? (rd_data - min_q) : 16'd0;
-    wire [18:0] scaled = left_q ? ({3'd0, diff} << shift_q) : ({3'd0, diff} >> shift_q);
-    wire [3:0]  gray   = (scaled > 19'd15) ? 4'd15 : scaled[3:0];
+    reg [15:0] diff;
+    reg [21:0] scaled;
+    reg [5:0]  level;
+    always @(*) begin
+        if (rd_data > min_q)
+            diff = rd_data - min_q;
+        else
+            diff = 16'd0;
+
+        if (left_q)
+            scaled = {6'd0, diff} << shift_q;
+        else
+            scaled = {6'd0, diff} >> shift_q;
+
+        if (scaled > 22'd63)
+            level = 6'd63;
+        else
+            level = scaled[5:0];
+    end
+
+    // Heat palette: 4 linear segments of 16 levels
+    wire [3:0] f = level[3:0];
+    reg  [11:0] heat;
+    always @(*) begin
+        case (level[5:4])
+            2'd0:    heat = {1'b0, f[3:1], 4'd0, f};
+            2'd1:    heat = {1'b1, f[3:1], 4'd0, ~f};
+            2'd2:    heat = {4'hF, f, 4'd0};
+            default: heat = {4'hF, 4'hF, f};
+        endcase
+    end
+
+    reg [11:0] pixel;
+    always @(*) begin
+        if (gray)
+            pixel = {3{level[5:2]}};
+        else
+            pixel = heat;
+    end
 
     always @(posedge clk) begin
         if (fixed_range) begin
             min_q   <= FIXED_MIN;
             left_q  <= 1'b0;
-            shift_q <= 4'd4;
+            shift_q <= 4'd2;
         end else begin
             min_q   <= t_min;
-            left_q  <= (msb_n < 4'd3);
-            shift_q <= (msb_n < 4'd3) ? (4'd3 - msb_n) : (msb_n - 4'd3);
+            left_q  <= (msb_n < 4'd5);
+            if (msb_n < 4'd5)
+                shift_q <= 4'd5 - msb_n;
+            else
+                shift_q <= msb_n - 4'd5;
         end
 
         // stage 1: thermal pixel coordinates
-        tx1 <= mirror_x ? (7'd79 - tx_raw) : tx_raw;
-        ty1 <= flip_y   ? (6'd61 - ty_raw) : ty_raw;
+        if (mirror_x)
+            tx1 <= 7'd79 - tx_raw;
+        else
+            tx1 <= tx_raw;
+
+        if (flip_y)
+            ty1 <= 6'd61 - ty_raw;
+        else
+            ty1 <= ty_raw;
 
         // stage 2: RAM address (ty * 80 + tx)
         rd_addr <= {ty1, 6'd0} + {ty1, 4'd0} + tx1;
@@ -91,7 +144,7 @@ module thermal_view (
         else if (!frame_valid)
             rgb <= 12'h222;
         else
-            rgb <= {gray, gray, gray};
+            rgb <= pixel;
     end
 
 endmodule

@@ -43,7 +43,7 @@ module vga_controller(
 		else
 		  r_25MHz <= r_25MHz + 1;
 	
-	assign w_25MHz = (r_25MHz == 0) ? 1 : 0; // assert tick 1/4 of the time
+	assign w_25MHz = (r_25MHz == 0); // assert tick 1/4 of the time
     // ****************************************************************************************
     
     // Counter Registers, two each for buffering to avoid glitches

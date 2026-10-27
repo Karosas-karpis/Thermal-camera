@@ -29,8 +29,19 @@ module thermal_frame_ram (
             mem[i] = 16'd0;
     end
 
-    wire [13:0] full_addr_a = wr_bank ? (addr_a + PIXELS) : {1'b0, addr_a};
-    wire [13:0] full_addr_b = rd_bank ? (addr_b + PIXELS) : {1'b0, addr_b};
+    reg [13:0] full_addr_a;
+    reg [13:0] full_addr_b;
+    always @(*) begin
+        if (wr_bank)
+            full_addr_a = addr_a + PIXELS;
+        else
+            full_addr_a = {1'b0, addr_a};
+
+        if (rd_bank)
+            full_addr_b = addr_b + PIXELS;
+        else
+            full_addr_b = {1'b0, addr_b};
+    end
 
     always @(posedge clk_a) begin
         if (we_a)

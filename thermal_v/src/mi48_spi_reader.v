@@ -43,14 +43,7 @@ module mi48_spi_reader #(
     output reg [15:0] frame_max    = 16'd0,
     output reg [15:0] frame_center = 16'd0,  // pixel (40, 31)
     output reg        sync_early   = 1'b0,   // sticky
-    output reg        sync_late    = 1'b0,   // sticky
-
-    // Raw values from the last read attempt, good or not (debug readout)
-    output reg        attempt_done = 1'b0,   // one-cycle pulse at the end of every read
-    output reg [15:0] dbg_word0    = 16'd0,  // header: frame counter
-    output reg [15:0] dbg_word1    = 16'd0,  // header: SenXor VDD
-    output reg [15:0] dbg_word2    = 16'd0,  // header: SenXor die temperature
-    output reg [15:0] dbg_words    = 16'd0   // words clocked (5040 expected)
+    output reg        sync_late    = 1'b0    // sticky
 );
 
     localparam integer PIXELS       = 4960;
@@ -86,9 +79,6 @@ module mi48_spi_reader #(
     reg [15:0] run_max    = 16'd0;
     reg        scale_seen = 1'b0;
     reg [15:0] run_center = 16'd0;
-    reg [15:0] raw_word0  = 16'd0;
-    reg [15:0] raw_word1  = 16'd0;
-    reg [15:0] raw_word2  = 16'd0;
 
     wire [13:0] frame_words = header_words + PIXELS;
     wire [13:0] pixel_idx   = word_cnt - header_words;
@@ -120,8 +110,14 @@ module mi48_spi_reader #(
             crc_in_le <= {word[7:0], word[15:8]};
             crc_bits  <= 5'd16;
         end else if (!crc_idle) begin
-            crc_be    <= {crc_be[14:0], 1'b0} ^ ((crc_be[15] ^ crc_in_be[15]) ? CRC_POLY : 16'd0);
-            crc_le    <= {crc_le[14:0], 1'b0} ^ ((crc_le[15] ^ crc_in_le[15]) ? CRC_POLY : 16'd0);
+            if (crc_be[15] ^ crc_in_be[15])
+                crc_be <= {crc_be[14:0], 1'b0} ^ CRC_POLY;
+            else
+                crc_be <= {crc_be[14:0], 1'b0};
+            if (crc_le[15] ^ crc_in_le[15])
+                crc_le <= {crc_le[14:0], 1'b0} ^ CRC_POLY;
+            else
+                crc_le <= {crc_le[14:0], 1'b0};
             crc_in_be <= {crc_in_be[14:0], 1'b0};
             crc_in_le <= {crc_in_le[14:0], 1'b0};
             crc_bits  <= crc_bits - 1'b1;
@@ -131,15 +127,6 @@ module mi48_spi_reader #(
     always @(posedge clk) begin
         pix_we       <= 1'b0;
         frame_done   <= 1'b0;
-        attempt_done <= 1'b0;
-
-        if (state == FINISH || state == ABORT) begin
-            attempt_done <= 1'b1;
-            dbg_word0    <= raw_word0;
-            dbg_word1    <= raw_word1;
-            dbg_word2    <= raw_word2;
-            dbg_words    <= word_cnt + 1'b1;
-        end
 
         if (reset) begin
             state      <= IDLE;
@@ -155,7 +142,10 @@ module mi48_spi_reader #(
                     sclk  <= 1'b0;
                     count <= 18'd0;
                     if (enable && drdy) begin
-                        header_words <= has_header ? 7'd80 : 7'd0;
+                        if (has_header)
+                            header_words <= 7'd80;
+                        else
+                            header_words <= 7'd0;
                         cs_n  <= 1'b0;
                         state <= SETUP;
                     end
@@ -164,7 +154,7 @@ module mi48_spi_reader #(
                 SETUP: begin
                     if (count == CS_SETUP - 1) begin
                         count    <= 18'd0;
-                        bit_cnt  <= 4'd0;
+                        bit_cnt    <= 4'd0;
                         word_cnt   <= 14'd0;
                         scale_seen <= 1'b0;
                         state      <= CLK_LOW;
@@ -179,23 +169,21 @@ module mi48_spi_reader #(
                         sclk  <= 1'b1;
                         shift <= word;
                         if (bit_cnt == 4'd15) begin
-                            if (word_cnt == 14'd0)
-                                hdr_count <= has_header ? word : hdr_count + 1'b1;
+                            if (word_cnt == 14'd0) begin
+                                if (has_header)
+                                    hdr_count <= word;
+                                else
+                                    hdr_count <= hdr_count + 1'b1;
+                            end
                             if (word_cnt == 14'd7)
                                 hdr_crc <= word;
-                            if (word_cnt == 14'd0)
-                                raw_word0 <= word;
-                            if (word_cnt == 14'd1)
-                                raw_word1 <= word;
-                            if (word_cnt == 14'd2)
-                                raw_word2 <= word;
                             if (in_pixels) begin
                                 pix_we   <= 1'b1;
                                 pix_addr <= pixel_idx[12:0];
                                 pix_data <= word;
                                 // 0 and other impossible readings (a dead pixel, or a
                                 // shifted word) must not set the scale. Otherwise the
-                                // picture is one flat gray and a warm object is one shade lighter.
+                                // picture is one flat colour and a warm object is one shade lighter.
                                 if (word >= 16'd2300 && word <= 16'd8000) begin
                                     if (!scale_seen || word < run_min)
                                         run_min <= word;

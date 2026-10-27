@@ -28,8 +28,21 @@ module i2c_master #(
 
     reg scl_drive_low = 1'b0;
     reg sda_drive_low = 1'b0;
-    assign scl = scl_drive_low ? 1'b0 : 1'bz;
-    assign sda = sda_drive_low ? 1'b0 : 1'bz;
+    reg scl_out;
+    reg sda_out;
+    always @(*) begin
+        if (scl_drive_low)
+            scl_out = 1'b0;
+        else
+            scl_out = 1'bz;
+
+        if (sda_drive_low)
+            sda_out = 1'b0;
+        else
+            sda_out = 1'bz;
+    end
+    assign scl = scl_out;
+    assign sda = sda_out;
 
     reg [1:0] scl_sync = 2'b11;
     reg [1:0] sda_sync = 2'b11;
