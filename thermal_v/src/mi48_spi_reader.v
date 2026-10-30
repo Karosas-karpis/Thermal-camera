@@ -20,7 +20,8 @@
 module mi48_spi_reader #(
     parameter integer SCLK_HALF    = 25,      // 100 MHz / 50 = 2 MHz SCLK
     parameter integer CS_SETUP     = 1_000,   // 10 us from CS low to first SCLK
-    parameter integer DONE_TIMEOUT = 200_000  // 2 ms for DATA_READY to fall
+    parameter integer DONE_TIMEOUT = 200_000, // 2 ms for DATA_READY to fall
+    parameter integer LEAD_WORDS   = 0        // pixel words the MI48 sends before the header (the frame's last pixels)
 ) (
     input             clk,
     input             reset,
@@ -42,6 +43,9 @@ module mi48_spi_reader #(
     output reg [15:0] frame_min    = 16'd0,
     output reg [15:0] frame_max    = 16'd0,
     output reg [15:0] frame_center = 16'd0,  // pixel (40, 31)
+    output reg        raw_we       = 1'b0,   // every received word, header included (debug)
+    output reg [13:0] raw_idx      = 14'd0,
+    output reg [15:0] raw_word     = 16'd0,
     output reg        sync_early   = 1'b0,   // sticky
     output reg        sync_late    = 1'b0    // sticky
 );
@@ -80,9 +84,13 @@ module mi48_spi_reader #(
     reg        scale_seen = 1'b0;
     reg [15:0] run_center = 16'd0;
 
-    wire [13:0] frame_words = header_words + PIXELS;
-    wire [13:0] pixel_idx   = word_cnt - header_words;
-    wire        in_pixels   = (word_cnt >= header_words) && (word_cnt < frame_words);
+    // The MI48 frame is LEAD_WORDS + header + (PIXELS - LEAD_WORDS) words long. The lead
+    // words are the last LEAD_WORDS pixels (the stream starts that many words early), so they
+    // are stored at the end of the pixel array.
+    wire [13:0] frame_words = header_words + PIXELS - LEAD_WORDS;
+    wire        in_lead     = (word_cnt < LEAD_WORDS);
+    wire [13:0] pixel_idx   = in_lead ? (PIXELS - LEAD_WORDS + word_cnt) : (word_cnt - header_words);
+    wire        in_pixels   = in_lead || ((word_cnt >= header_words) && (word_cnt < frame_words));
 
     // miso_q was registered >= SCLK_HALF-1 cycles after the falling edge,
     // so it is stable when sampled at the rising edge.
@@ -126,6 +134,7 @@ module mi48_spi_reader #(
 
     always @(posedge clk) begin
         pix_we       <= 1'b0;
+        raw_we       <= 1'b0;
         frame_done   <= 1'b0;
 
         if (reset) begin
@@ -143,9 +152,9 @@ module mi48_spi_reader #(
                     count <= 18'd0;
                     if (enable && drdy) begin
                         if (has_header)
-                            header_words <= 7'd80;
+                            header_words <= LEAD_WORDS + 80;
                         else
-                            header_words <= 7'd0;
+                            header_words <= LEAD_WORDS;
                         cs_n  <= 1'b0;
                         state <= SETUP;
                     end
@@ -169,13 +178,16 @@ module mi48_spi_reader #(
                         sclk  <= 1'b1;
                         shift <= word;
                         if (bit_cnt == 4'd15) begin
-                            if (word_cnt == 14'd0) begin
+                            raw_we   <= 1'b1;
+                            raw_idx  <= word_cnt;
+                            raw_word <= word;
+                            if (word_cnt == LEAD_WORDS) begin
                                 if (has_header)
                                     hdr_count <= word;
                                 else
                                     hdr_count <= hdr_count + 1'b1;
                             end
-                            if (word_cnt == 14'd7)
+                            if (word_cnt == LEAD_WORDS + 7)
                                 hdr_crc <= word;
                             if (in_pixels) begin
                                 pix_we   <= 1'b1;

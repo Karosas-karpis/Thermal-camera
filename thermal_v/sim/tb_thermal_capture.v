@@ -81,18 +81,42 @@ module tb_thermal_capture;
         if (frame_done)
             wr_bank <= ~wr_bank;
 
-    wire [15:0] unused_dout;
+    wire [15:0] ram_dout;
+    reg  [12:0] ram_addr_b = 13'd0;
+
+    wire        a_we, a_bank;
+    wire [12:0] a_addr;
+    wire [15:0] a_din, a_dout, filt_min, filt_max;
+
+    // seed = 1: the filter passes samples through, so the RAM holds the raw frame
+    thermal_filter filt (
+        .clk(clk),
+        .seed(1'b1),
+        .disp_bank(~wr_bank),
+        .wr_bank(wr_bank),
+        .frame_done(frame_done),
+        .pix_we(pix_we),
+        .pix_addr(pix_addr),
+        .pix_data(pix_data),
+        .a_we(a_we),
+        .a_bank(a_bank),
+        .a_addr(a_addr),
+        .a_din(a_din),
+        .a_dout(a_dout),
+        .frame_min(filt_min),
+        .frame_max(filt_max)
+    );
 
     thermal_frame_ram ram (
-        .clk_a(clk),
-        .we_a(pix_we),
-        .wr_bank(wr_bank),
-        .addr_a(pix_addr),
-        .din_a(pix_data),
-        .clk_b(clk),
+        .clk(clk),
+        .we_a(a_we),
+        .bank_a(a_bank),
+        .addr_a(a_addr),
+        .din_a(a_din),
+        .dout_a(a_dout),
         .rd_bank(~wr_bank),
-        .addr_b(13'd0),
-        .dout_b(unused_dout)
+        .addr_b(ram_addr_b),
+        .dout_b(ram_dout)
     );
 
     mi48_model #(
@@ -133,17 +157,24 @@ module tb_thermal_capture;
         end
     endtask
 
-    // Frame just completed was written to the bank before the toggle.
+    // Frame just completed was written to the bank before the toggle, which is
+    // the bank port B reads (rd_bank = ~wr_bank). The IP has 1-cycle read latency.
     task check_frame;
-        integer i, f, base;
+        integer i, f;
         begin
             f = frame_count;
-            base = wr_bank ? 0 : 4960;
-            for (i = 0; i < 4960; i = i + 1)
-                check("pixel", ram.mem[base + i], expected_pixel(i, f));
+            for (i = 0; i < 4960; i = i + 1) begin
+                ram_addr_b = i;
+                @(posedge clk);
+                @(posedge clk);
+                #1;
+                check("pixel", ram_dout, expected_pixel(i, f));
+            end
             check("frame_min", frame_min, expected_pixel(0, f));
             check("frame_max", frame_max, expected_pixel(4959, f));
             check("frame_center", frame_center, expected_pixel(31 * 80 + 40, f));
+            check("filter min", filt_min, expected_pixel(0, f));
+            check("filter max", filt_max, expected_pixel(4959, f));
             check("crc_ok", crc_ok, 1'b1);
             $display("[%0t] frame %0d checked (min %0d, max %0d, centre %0d, crc ok)",
                      $time, f, frame_min, frame_max, frame_center);
