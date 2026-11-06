@@ -75,16 +75,19 @@ set_property -dict { PACKAGE_PIN U17   IOSTANDARD LVCMOS33 } [get_ports btnD]
 ## Pmod JA - Thermal-44 camera module (3.3 V from JA6/JA12, GND JA5/JA11)
 ## Top row    (pins 1-4):  SCLK  MOSI  MISO  CS_N
 ## Bottom row (pins 7-10): SCL   SDA   nRST  DRDY
+## Module board labels: VCC GND MOSI MISO CLK SS SCL SDA READY RESET
+##   CLK = SCLK, SS = CS_N, READY = DRDY, RESET = nRST
+## MOSI carries no data: mi48_spi_reader holds JA2 at 0, so the module's MOSI stays low.
 ## SPI outputs use slow slew + 4 mA drive to limit ringing on long jumper wires
 ## (ringing on SCLK makes the sensor count extra clock edges).
-set_property -dict { PACKAGE_PIN J1   IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 4 } [get_ports thermal_sclk];# JA1 - SCLK
-set_property -dict { PACKAGE_PIN L2   IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 4 } [get_ports thermal_mosi];# JA2 - MOSI
+set_property -dict { PACKAGE_PIN J1   IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 4 } [get_ports thermal_sclk];# JA1 - SCLK (module CLK)
+set_property -dict { PACKAGE_PIN L2   IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 4 } [get_ports thermal_mosi];# JA2 - MOSI (held at 0)
 set_property -dict { PACKAGE_PIN J2   IOSTANDARD LVCMOS33 } [get_ports thermal_miso];# JA3 - MISO
-set_property -dict { PACKAGE_PIN G2   IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 4 } [get_ports thermal_cs_n];# JA4 - CS
+set_property -dict { PACKAGE_PIN G2   IOSTANDARD LVCMOS33 SLEW SLOW DRIVE 4 } [get_ports thermal_cs_n];# JA4 - CS (module SS)
 set_property -dict { PACKAGE_PIN H1   IOSTANDARD LVCMOS33 PULLUP TRUE } [get_ports thermal_scl];# JA7 - SCL
 set_property -dict { PACKAGE_PIN K2   IOSTANDARD LVCMOS33 PULLUP TRUE } [get_ports thermal_sda];# JA8 - SDA
-set_property -dict { PACKAGE_PIN H2   IOSTANDARD LVCMOS33 } [get_ports thermal_rst_n];# JA9 - nRESET
-set_property -dict { PACKAGE_PIN G3   IOSTANDARD LVCMOS33 } [get_ports thermal_drdy];# JA10 - DATA_READY
+set_property -dict { PACKAGE_PIN H2   IOSTANDARD LVCMOS33 } [get_ports thermal_rst_n];# JA9 - nRESET (module RESET)
+set_property -dict { PACKAGE_PIN G3   IOSTANDARD LVCMOS33 } [get_ports thermal_drdy];# JA10 - DATA_READY (module READY)
 
 ## Slow/asynchronous I/O: inputs are synchronised or sampled long after they settle
 set_false_path -from [get_ports {btnC btnU btnD btnL btnR sw[*] thermal_miso thermal_drdy thermal_scl thermal_sda sioc siod}]
@@ -99,27 +102,30 @@ set_false_path -to   [get_ports {led[*] seg[*] dp an[*] uart_tx thermal_sclk the
 
 ## Pmod JB (left) - camera left side: RET/PWDN and D1/D0 D3/D2 D5/D4
 ## Row toward board center = pins 1-4, row toward board edge = pins 7-10
-set_property -dict { PACKAGE_PIN A14  IOSTANDARD LVCMOS33 } [get_ports cam_reset];# JB1 - RET
-set_property -dict { PACKAGE_PIN A16  IOSTANDARD LVCMOS33 } [get_ports {d[1]}];# JB2 - D1
-set_property -dict { PACKAGE_PIN B15  IOSTANDARD LVCMOS33 } [get_ports {d[3]}];# JB3 - D3
-set_property -dict { PACKAGE_PIN B16  IOSTANDARD LVCMOS33 } [get_ports {d[5]}];# JB4 - D5
-set_property -dict { PACKAGE_PIN A15  IOSTANDARD LVCMOS33 } [get_ports pwdn];# JB7 - PWDN
-set_property -dict { PACKAGE_PIN A17  IOSTANDARD LVCMOS33 } [get_ports {d[0]}];# JB8 - D0
-set_property -dict { PACKAGE_PIN C15  IOSTANDARD LVCMOS33 } [get_ports {d[2]}];# JB9 - D2
-set_property -dict { PACKAGE_PIN C16  IOSTANDARD LVCMOS33 } [get_ports {d[4]}];# JB10 - D4
+set_property -dict { PACKAGE_PIN A14  IOSTANDARD LVCMOS33 } [get_ports pwdn];# JB1 - PWDN
+set_property -dict { PACKAGE_PIN A16  IOSTANDARD LVCMOS33 } [get_ports {d[0]}];# JB2 - D0
+set_property -dict { PACKAGE_PIN B15  IOSTANDARD LVCMOS33 } [get_ports {d[2]}];# JB3 - D2
+set_property -dict { PACKAGE_PIN B16  IOSTANDARD LVCMOS33 } [get_ports {d[4]}];# JB4 - D4
+set_property -dict { PACKAGE_PIN A15  IOSTANDARD LVCMOS33 } [get_ports cam_reset];# JB7 - RET
+set_property -dict { PACKAGE_PIN A17  IOSTANDARD LVCMOS33 } [get_ports {d[1]}];# JB8 - D1
+set_property -dict { PACKAGE_PIN C15  IOSTANDARD LVCMOS33 } [get_ports {d[3]}];# JB9 - D3
+set_property -dict { PACKAGE_PIN C16  IOSTANDARD LVCMOS33 } [get_ports {d[5]}];# JB10 - D5
 
 ## Pmod JC (right) - camera right side: D7/D6 PLK/XLK VS/HS SCL/SDA + 3.3/GND
-set_property -dict { PACKAGE_PIN K17  IOSTANDARD LVCMOS33 } [get_ports {d[7]}];# JC1 - D7
-set_property -dict { PACKAGE_PIN M18  IOSTANDARD LVCMOS33 } [get_ports pclk];# JC2 - PLK
-set_property -dict { PACKAGE_PIN N17  IOSTANDARD LVCMOS33 } [get_ports cam_vsync];# JC3 - VS
-set_property -dict { PACKAGE_PIN P18  IOSTANDARD LVCMOS33 PULLUP TRUE } [get_ports sioc];# JC4 - SCL
-set_property -dict { PACKAGE_PIN L17  IOSTANDARD LVCMOS33 } [get_ports {d[6]}];# JC7 - D6
-set_property -dict { PACKAGE_PIN M19  IOSTANDARD LVCMOS33 } [get_ports xclk];# JC8 - XLK
-set_property -dict { PACKAGE_PIN P17  IOSTANDARD LVCMOS33 } [get_ports href];# JC9 - HS
-set_property -dict { PACKAGE_PIN R18  IOSTANDARD LVCMOS33 PULLUP TRUE } [get_ports siod];# JC10 - SDA
+set_property -dict { PACKAGE_PIN K17  IOSTANDARD LVCMOS33 } [get_ports {d[6]}];# JC1 - D6
+set_property -dict { PACKAGE_PIN M18  IOSTANDARD LVCMOS33 } [get_ports xclk];# JC2 - XLK
+set_property -dict { PACKAGE_PIN N17  IOSTANDARD LVCMOS33 } [get_ports href];# JC3 - HS
+set_property -dict { PACKAGE_PIN P18  IOSTANDARD LVCMOS33 PULLUP TRUE } [get_ports siod];# JC4 - SDA
+set_property -dict { PACKAGE_PIN L17  IOSTANDARD LVCMOS33 } [get_ports {d[7]}];# JC7 - D7
+set_property -dict { PACKAGE_PIN M19  IOSTANDARD LVCMOS33 } [get_ports pclk];# JC8 - PLK
+set_property -dict { PACKAGE_PIN P17  IOSTANDARD LVCMOS33 } [get_ports cam_vsync];# JC9 - VS
+set_property -dict { PACKAGE_PIN R18  IOSTANDARD LVCMOS33 PULLUP TRUE } [get_ports sioc];# JC10 - SCL
 
 ## Camera pixel clock (typical ~10-25 MHz from OV7670)
 create_clock -period 40.000 -name pclk_pin -waveform {0.000 20.000} [get_ports pclk]
+## M19 (JC8) is the N side of a clock-capable pair, so it cannot drive the BUFG directly.
+## Route it through general fabric instead; fine for a ~25 MHz pixel clock.
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets pclk_IBUF]
 set_clock_groups -asynchronous -group [get_clocks sys_clk_pin] -group [get_clocks pclk_pin]
 
 ##Pmod Header JXADC

@@ -24,7 +24,7 @@
 //   15 = toggles on optical pixel writes
 //
 // Switches:
-//   sw[0] = mirror thermal image horizontally
+//   sw[0] = mirror thermal image horizontally (default orientation is turned 180 degrees)
 //   sw[1] = flip thermal image vertically
 //   sw[2] = fixed 15-40 C range instead of auto range
 //   sw[3] = only display frames that pass the header CRC
@@ -32,8 +32,9 @@
 //   sw[5] = thermal grayscale instead of colour palette
 //   sw[7:6] = view: 0 thermal, 1 optical, 2 thermal + edges, 3 optical + hot colour
 //   sw[8] = buttons: 0 move optical image, 1 zoom (U/D) and edge threshold (L/R)
-//   sw[15:9] = 0: 7-segment shows the alignment (sw[8] = 0: off_x off_y, 1: scale thr)
-//              else raw SPI word number shown in hex (0-79 header, 80+ pixels)
+//   sw[15:9] = unused
+//
+// 7-segment shows the alignment (sw[8] = 0: off_x off_y, 1: scale thr)
 //
 // btnC = restart MI48 bring-up, clear errors and reset the alignment
 
@@ -82,8 +83,10 @@ module top_fusion (
     // The MI48 frame is still 5040 words, but starts with 9 pixel-like words before the
     // 80-word header (seen with tools/dump_frames.py); the reader stores them as the last 9 pixels.
     localparam integer SPI_LEAD_WORDS = 9;
-    localparam integer SPI_SCLK_HALF  = 6;
-    localparam [7:0]   FRAME_RATE_DIV = 8'd1;
+    // Slowed to 2 MHz / ~6 FPS to test whether thermal noise comes from the long wires.
+    // Was SPI_SCLK_HALF 6 (8.33 MHz) and FRAME_RATE_DIV 1 (~25 FPS).
+    localparam integer SPI_SCLK_HALF  = 25;
+    localparam [7:0]   FRAME_RATE_DIV = 8'd4;
 
     // Were switches in the optical-only design; left off here to free the switches
     localparam CAM_INVERT_VSYNC = 1'b0;
@@ -359,8 +362,9 @@ module top_fusion (
         .new_frame(new_frame),
         .t_min(frame_min),
         .t_max(frame_max),
-        .mirror_x(sw[0]),
-        .flip_y(sw[1]),
+        // The thermal image is turned 180 degrees by default; sw[0] / sw[1] undo each half
+        .mirror_x(~sw[0]),
+        .flip_y(~sw[1]),
         .fixed_range(sw[2]),
         .gray(sw[5]),
         .mode(sw[7:6]),
@@ -395,15 +399,10 @@ module top_fusion (
         .tx(uart_tx)
     );
 
-    // 7-segment: alignment settings, or the first 128 raw SPI words of the latest frame
-    reg [15:0] dbg_mem [0:127];
+    // 7-segment: alignment settings
     reg [15:0] dbg_word = 16'd0;
-    wire [15:0] cal_word = sw[8] ? {opt_scale, 1'b0, edge_thr} : {off_x[7:0], off_y[7:0]};
-    always @(posedge clk) begin
-        if (raw_we && raw_idx < 14'd128)
-            dbg_mem[raw_idx[6:0]] <= raw_word;
-        dbg_word <= (sw[15:9] == 7'd0) ? cal_word : dbg_mem[sw[15:9]];
-    end
+    always @(posedge clk)
+        dbg_word <= sw[8] ? {opt_scale, 1'b0, edge_thr} : {off_x[7:0], off_y[7:0]};
 
     reg [17:0] seg_cnt = 18'd0;
     always @(posedge clk) seg_cnt <= seg_cnt + 1'b1;

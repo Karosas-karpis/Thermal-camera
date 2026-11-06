@@ -4,11 +4,14 @@
 // care of contact bounce.
 //   cal_alt = 0: U/D/L/R move the optical image up/down/left/right
 //   cal_alt = 1: U/D zoom the optical image in/out, L/R lower/raise the edge threshold
-// reset puts everything back to the defaults.
+// reset puts everything back to the defaults. The defaults are the measured alignment
+// (7-segment FD68 / 722D before the image was turned, x offset converted for the new orientation).
 
 module fusion_cal #(
-    parameter [7:0] SCALE_INIT = 8'd128,
-    parameter [6:0] THR_INIT   = 7'd48
+    parameter signed [9:0] OFF_X_INIT = -10'sd43,
+    parameter signed [9:0] OFF_Y_INIT = 10'sd104,
+    parameter        [7:0] SCALE_INIT = 8'd114,
+    parameter        [6:0] THR_INIT   = 7'd45
 ) (
     input                   clk,
     input                   reset,
@@ -17,8 +20,8 @@ module fusion_cal #(
     input                   btnL,
     input                   btnR,
     input                   cal_alt,
-    output reg signed [9:0] off_x = 10'sd0,
-    output reg signed [9:0] off_y = 10'sd0,
+    output reg signed [9:0] off_x = OFF_X_INIT,
+    output reg signed [9:0] off_y = OFF_Y_INIT,
     output reg        [7:0] scale = SCALE_INIT,
     output reg        [6:0] thr   = THR_INIT
 );
@@ -42,8 +45,8 @@ module fusion_cal #(
         rep <= rep + 1'b1;
 
         if (reset) begin
-            off_x <= 10'sd0;
-            off_y <= 10'sd0;
+            off_x <= OFF_X_INIT;
+            off_y <= OFF_Y_INIT;
             scale <= SCALE_INIT;
             thr   <= THR_INIT;
         end else if (step) begin
