@@ -83,10 +83,8 @@ module top_fusion (
     // The MI48 frame is still 5040 words, but starts with 9 pixel-like words before the
     // 80-word header (seen with tools/dump_frames.py); the reader stores them as the last 9 pixels.
     localparam integer SPI_LEAD_WORDS = 9;
-    // Slowed to 2 MHz / ~6 FPS to test whether thermal noise comes from the long wires.
-    // Was SPI_SCLK_HALF 6 (8.33 MHz) and FRAME_RATE_DIV 1 (~25 FPS).
-    localparam integer SPI_SCLK_HALF  = 25;
-    localparam [7:0]   FRAME_RATE_DIV = 8'd4;
+    localparam integer SPI_SCLK_HALF  = 6;
+    localparam [7:0]   FRAME_RATE_DIV = 8'd1;
 
     // Were switches in the optical-only design; left off here to free the switches
     localparam CAM_INVERT_VSYNC = 1'b0;

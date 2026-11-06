@@ -4,12 +4,12 @@
 // care of contact bounce.
 //   cal_alt = 0: U/D/L/R move the optical image up/down/left/right
 //   cal_alt = 1: U/D zoom the optical image in/out, L/R lower/raise the edge threshold
-// reset puts everything back to the defaults. The defaults are the measured alignment
-// (7-segment FD68 / 722D before the image was turned, x offset converted for the new orientation).
+// reset puts everything back to the defaults. Scale and threshold are the measured alignment
+// (722D); the offsets centre the camera image, as the OV7670 was remounted turned 90 degrees.
 
 module fusion_cal #(
-    parameter signed [9:0] OFF_X_INIT = -10'sd43,
-    parameter signed [9:0] OFF_Y_INIT = 10'sd104,
+    parameter signed [9:0] OFF_X_INIT = 10'sd18,
+    parameter signed [9:0] OFF_Y_INIT = 10'sd13,
     parameter        [7:0] SCALE_INIT = 8'd114,
     parameter        [6:0] THR_INIT   = 7'd45
 ) (

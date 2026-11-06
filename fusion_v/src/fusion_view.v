@@ -1,10 +1,9 @@
 `timescale 1ns / 1ps
 
 // Fused VGA output. Thermal is the screen reference: bilinear 640x480 from thermal_upscale.
-// The optical frame is shown transposed (90 degrees clockwise, flipped vertically, then turned
-// 180 degrees), so it is 240 wide and 320 tall. Screen to optical image:
-// u = (x * scale >> 8) + off_x, v = (y * scale >> 8) + off_y, then camera pixel
-// col = v, row = u. A smaller scale zooms in.
+// The OV7670 is mounted turned 90 degrees clockwise, so its frame is shown flipped vertically.
+// Screen to optical image: u = (x * scale >> 8) + off_x, v = (y * scale >> 8) + off_y,
+// then camera pixel col = u, row = 239 - v. A smaller scale zooms in.
 //
 // mode: 0 = thermal
 //       1 = optical grayscale
@@ -179,24 +178,24 @@ module fusion_view (
         level_q <= level;
     end
 
-    // Optical address: (x * scale >> 8) + offset in the rotated 240x320 image, then
-    // rotated back to the camera's 320x240 layout. Off-frame pixels are flagged invalid.
+    // Optical address: (x * scale >> 8) + offset, flipped vertically to the camera's layout.
+    // Off-frame pixels are flagged invalid.
     reg        [17:0] mx = 18'd0;
     reg        [17:0] my = 18'd0;
     reg signed [11:0] ox = 12'sd0;
     reg signed [11:0] oy = 12'sd0;
     reg               opt_ok = 1'b0;
 
-    // Transposed: screen-side column u is camera row u, row v is camera column v
-    wire [7:0] cam_row = ox[7:0];
+    // Flipped vertically: screen-side row v is camera row 239 - v
+    wire [7:0] cam_row = 8'd239 - oy[7:0];
 
     always @(posedge clk) begin
         mx <= x * scale;
         my <= y * scale;
         ox <= $signed({2'b00, mx[17:8]}) + off_x;
         oy <= $signed({2'b00, my[17:8]}) + off_y;
-        opt_ok   <= (ox >= 12'sd0) && (ox < 12'sd240) && (oy >= 12'sd0) && (oy < 12'sd320);
-        opt_addr <= {1'b0, cam_row, 8'd0} + {3'b000, cam_row, 6'd0} + {8'd0, oy[8:0]};
+        opt_ok   <= (ox >= 12'sd0) && (ox < 12'sd320) && (oy >= 12'sd0) && (oy < 12'sd240);
+        opt_addr <= {1'b0, cam_row, 8'd0} + {3'b000, cam_row, 6'd0} + {8'd0, ox[8:0]};
     end
 
     // opt_ok is 2 clocks ahead of opt_data

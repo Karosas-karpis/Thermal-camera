@@ -5,21 +5,13 @@
 //   2. poll STATUS (0xB6) until BOOTING_UP (bit 5) clears
 //   3. read SENXOR_TYPE (0xBA) for the debug LEDs
 //   4. FRAME_RATE (0xB4)  = FRAME_RATE_DIV
-//   5. FILTER_SETTING_1 (0xD1-0xD2) = FILTER_STRENGTH, FILTER_CONTROL (0xD0) = FILTER_CONTROL,
-//      then wait FILTER_INIT_CYCLES for the temporal filter init (~40 ms per the datasheet)
-//   6. FRAME_MODE (0xB1)  = 0x02 (continuous stream, header included)
-//   7. read FRAME_MODE back, then config_done
+//   5. FRAME_MODE (0xB1)  = 0x02 (continuous stream, header included)
+//   6. read FRAME_MODE back, then config_done
 // Any NACK or I2C timeout sets i2c_error (sticky) and restarts from step 1.
 
 module mi48_ctrl #(
     parameter [6:0]   I2C_ADDR       = 7'h40,
     parameter [7:0]   FRAME_RATE_DIV = 8'd1,
-    // On-chip filters. FILTER_CONTROL bits: 0 temporal enable, 1 temporal init (self-clears),
-    // 2 rolling average, 5 median 5x5 (0 = 3x3), 6 median enable.
-    // 0x43 = temporal + 3x3 median. Strength 125 matches the vendor GUI (datasheet default 50).
-    parameter [7:0]   FILTER_CONTROL  = 8'h43,
-    parameter [15:0]  FILTER_STRENGTH = 16'd125,
-    parameter integer FILTER_INIT_CYCLES = 5_000_000, // 50 ms
     parameter integer QUARTER_TICKS  = 500,
     parameter integer RESET_CYCLES   = 100_000,     // 1 ms
     parameter integer BOOT_CYCLES    = 50_000_000,  // 500 ms
@@ -42,35 +34,28 @@ module mi48_ctrl #(
         REG_FRAME_MODE  = 8'hB1,
         REG_FRAME_RATE  = 8'hB4,
         REG_STATUS      = 8'hB6,
-        REG_SENXOR_TYPE = 8'hBA,
-        REG_FILTER_CTRL = 8'hD0,
-        REG_FILTER_LSB  = 8'hD1,
-        REG_FILTER_MSB  = 8'hD2;
+        REG_SENXOR_TYPE = 8'hBA;
 
     localparam [7:0] FRAME_MODE_STREAM = 8'h02;
 
-    localparam [4:0]
-        S_RESET      = 5'd0,
-        S_BOOT       = 5'd1,
-        S_POLL       = 5'd2,
-        S_POLL_CHECK = 5'd3,
-        S_POLL_GAP   = 5'd4,
-        S_TYPE       = 5'd5,
-        S_TYPE_SAVE  = 5'd6,
-        S_RATE       = 5'd7,
-        S_MODE       = 5'd8,
-        S_MODE_RB    = 5'd9,
-        S_MODE_SAVE  = 5'd10,
-        S_RUN        = 5'd11,
-        S_ERROR      = 5'd12,
-        S_I2C_WAIT   = 5'd13,
-        S_FILT_LSB   = 5'd14,
-        S_FILT_MSB   = 5'd15,
-        S_FILT_CTRL  = 5'd16,
-        S_FILT_WAIT  = 5'd17;
+    localparam [3:0]
+        S_RESET      = 4'd0,
+        S_BOOT       = 4'd1,
+        S_POLL       = 4'd2,
+        S_POLL_CHECK = 4'd3,
+        S_POLL_GAP   = 4'd4,
+        S_TYPE       = 4'd5,
+        S_TYPE_SAVE  = 4'd6,
+        S_RATE       = 4'd7,
+        S_MODE       = 4'd8,
+        S_MODE_RB    = 4'd9,
+        S_MODE_SAVE  = 4'd10,
+        S_RUN        = 4'd11,
+        S_ERROR      = 4'd12,
+        S_I2C_WAIT   = 4'd13;
 
-    reg [4:0]  state     = S_RESET;
-    reg [4:0]  ret_state = S_RESET;
+    reg [3:0]  state     = S_RESET;
+    reg [3:0]  ret_state = S_RESET;
     reg [25:0] count     = 26'd0;
     reg [7:0]  last_rd   = 8'd0;
 
@@ -101,7 +86,7 @@ module mi48_ctrl #(
         .sda(sda)
     );
 
-    task issue(input rd, input [7:0] register, input [7:0] value, input [4:0] next);
+    task issue(input rd, input [7:0] register, input [7:0] value, input [3:0] next);
         begin
             i2c_start <= 1'b1;
             i2c_read  <= rd;
@@ -171,21 +156,7 @@ module mi48_ctrl #(
                     state <= S_RATE;
                 end
 
-                S_RATE: issue(1'b0, REG_FRAME_RATE, FRAME_RATE_DIV, S_FILT_LSB);
-
-                S_FILT_LSB:  issue(1'b0, REG_FILTER_LSB, FILTER_STRENGTH[7:0], S_FILT_MSB);
-                S_FILT_MSB:  issue(1'b0, REG_FILTER_MSB, FILTER_STRENGTH[15:8], S_FILT_CTRL);
-                S_FILT_CTRL: issue(1'b0, REG_FILTER_CTRL, FILTER_CONTROL, S_FILT_WAIT);
-
-                // Temporal filter init clears itself after ~40 ms; start streaming after that
-                S_FILT_WAIT: begin
-                    if (count == FILTER_INIT_CYCLES - 1) begin
-                        count <= 26'd0;
-                        state <= S_MODE;
-                    end else begin
-                        count <= count + 1'b1;
-                    end
-                end
+                S_RATE: issue(1'b0, REG_FRAME_RATE, FRAME_RATE_DIV, S_MODE);
 
                 S_MODE: issue(1'b0, REG_FRAME_MODE, FRAME_MODE_STREAM, S_MODE_RB);
 

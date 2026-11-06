@@ -29,7 +29,6 @@ module tb_thermal_capture;
         .BOOT_CYCLES(1_000),
         .POLL_CYCLES(2_000),
         .RETRY_CYCLES(2_000),
-        .FILTER_INIT_CYCLES(1_000),
         .I2C_TIMEOUT(100_000)
     ) ctrl (
         .clk(clk),
@@ -193,9 +192,6 @@ module tb_thermal_capture;
         check("frame_mode", frame_mode, 8'h02);
         check("sensor_type", sensor_type, 8'h03);
         check("frame_rate reg", sensor.regs[8'hB4], 8'h04);
-        check("filter strength lsb", sensor.regs[8'hD1], 8'd125);
-        check("filter strength msb", sensor.regs[8'hD2], 8'd0);
-        check("filter control", sensor.regs[8'hD0], 8'h43);
         check("i2c_error", i2c_error, 1'b0);
 
         wait_frame;
