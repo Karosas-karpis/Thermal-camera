@@ -77,18 +77,18 @@ module tb_fusion;
         .rgb(rgb), .hsync(hs), .vsync(vs)
     );
 
-    // Pixel n is on rgb for the 4 clocks ending 17 clocks after its last clock on x / y
-    reg [16:0] tick_d = 17'd0;
-    reg [16:0] von_d  = 17'd0;
-    reg [9:0]  x_d [0:16];
-    reg [9:0]  y_d [0:16];
+    // Pixel n is on rgb for the 4 clocks ending 19 clocks after its last clock on x / y
+    reg [18:0] tick_d = 19'd0;
+    reg [18:0] von_d  = 19'd0;
+    reg [9:0]  x_d [0:18];
+    reg [9:0]  y_d [0:18];
     integer k;
     always @(posedge clk) begin
-        tick_d <= {tick_d[15:0], p_tick};
-        von_d  <= {von_d[15:0], video_on};
+        tick_d <= {tick_d[17:0], p_tick};
+        von_d  <= {von_d[17:0], video_on};
         x_d[0] <= x;
         y_d[0] <= y;
-        for (k = 1; k < 17; k = k + 1) begin
+        for (k = 1; k < 19; k = k + 1) begin
             x_d[k] <= x_d[k - 1];
             y_d[k] <= y_d[k - 1];
         end
@@ -138,7 +138,7 @@ module tb_fusion;
             repeat (500000) @(posedge clk);   // let the new view reach the pipeline output
             while (count < 307200) begin
                 @(posedge clk);
-                if (tick_d[16] && von_d[16] && (count > 0 || (x_d[16] == 0 && y_d[16] == 0))) begin
+                if (tick_d[18] && von_d[18] && (count > 0 || (x_d[18] == 0 && y_d[18] == 0))) begin
                     $fdisplay(fd, "%03x", rgb);
                     count = count + 1;
                 end

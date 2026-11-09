@@ -31,10 +31,17 @@
 //   sw[4] = bypass the temporal filter (debug: raw frames straight to the RAM)
 //   sw[5] = thermal grayscale instead of colour palette
 //   sw[7:6] = view: 0 thermal, 1 optical, 2 thermal + edges, 3 optical + hot colour
-//   sw[8] = buttons: 0 move optical image, 1 zoom (U/D) and edge threshold (L/R)
-//   sw[15:9] = unused
+//   sw[8] = buttons: 0 move thermal image, 1 thermal zoom (U/D) and edge threshold (L/R)
+//   sw[9]  = MI48 temporal filter      (0xD0 bits 0+1, strength 0xD1-0xD2) - applied on btnC
+//   sw[10] = MI48 rolling average      (0xD0 bit 2)                        - applied on btnC
+//   sw[11] = MI48 median filter 3x3    (0xD0 bit 6)                        - applied on btnC
+//   sw[12] = MI48 median filter 5x5    (0xD0 bits 5+6)                     - applied on btnC
+//   sw[13] = 7-segment shows the MI48 firmware version
+//   sw[14] = FPGA temporal filter motion threshold 5 K instead of 2 K
+//   sw[15] = unused
 //
-// 7-segment shows the alignment (sw[8] = 0: off_x off_y, 1: scale thr)
+// 7-segment shows the alignment (sw[8] = 0: off_x off_y, 1: scale thr),
+// or with sw[13] the MI48 firmware version {FW_VERSION_1, FW_VERSION_2}
 //
 // btnC = restart MI48 bring-up, clear errors and reset the alignment
 
@@ -78,13 +85,19 @@ module top_fusion (
     output        pwdn
 );
 
-    // 8.33 MHz SCLK: a frame (5040 words) takes ~10 ms, so the MI48 can run at FPS_MAX (~25 FPS).
-    // If the sync or CRC LEDs light up: SPI_SCLK_HALF 25 (2 MHz) with FRAME_RATE_DIV 4 (~6 FPS).
-    // The MI48 frame is still 5040 words, but starts with 9 pixel-like words before the
-    // 80-word header (seen with tools/dump_frames.py); the reader stores them as the last 9 pixels.
-    localparam integer SPI_LEAD_WORDS = 9;
+    // SCLK = 100 MHz / (2 * SPI_SCLK_HALF); frame rate ~ 25 FPS / FRAME_RATE_DIV.
+    // 6 -> 8.33 MHz, a frame (5040 words) takes ~10 ms of the 80 ms frame period at
+    // FRAME_RATE_DIV 2 (~12.5 FPS). At FRAME_RATE_DIV 1 the MI48 sent frame 1 and then
+    // stopped releasing frames (header frozen, tear line on screen). If a UART dump shows link errors, go back to 16 (3.13 MHz,
+    // ~26 ms, checked clean). The MI48 must be read out within one period at its maximum
+    // rate (STATUS.READOUT_TOO_SLOW), so don't go below ~2.1 MHz (SPI_SCLK_HALF 23).
+    // Each read is 5040 words but starts with 8 words before the 80-word header: the last 8
+    // pixels of the previous frame (tools/dump_frames.py: the header frame counter is word 8,
+    // and the header CRC matches the pixels plus the next read's first 8 words).
+    // The reader stores them as the last 8 pixels, one frame late.
+    localparam integer SPI_LEAD_WORDS = 8;
     localparam integer SPI_SCLK_HALF  = 6;
-    localparam [7:0]   FRAME_RATE_DIV = 8'd1;
+    localparam [7:0]   FRAME_RATE_DIV = 8'd2;
 
     // Were switches in the optical-only design; left off here to free the switches
     localparam CAM_INVERT_VSYNC = 1'b0;
@@ -99,18 +112,21 @@ module top_fusion (
     wire       config_done;
     wire       i2c_error;
     wire [7:0] frame_mode;
+    wire [15:0] fw_version;
 
     mi48_ctrl #(
         .FRAME_RATE_DIV(FRAME_RATE_DIV)
     ) thermal_setup (
         .clk(clk),
         .reset(reset),
+        .filters(sw[12:9]),
         .thermal_rst_n(thermal_rst_n),
         .scl(thermal_scl),
         .sda(thermal_sda),
         .config_done(config_done),
         .i2c_error(i2c_error),
-        .frame_mode(frame_mode)
+        .frame_mode(frame_mode),
+        .fw_version(fw_version)
     );
 
     wire        raw_we;
@@ -196,6 +212,7 @@ module top_fusion (
     thermal_filter filt (
         .clk(clk),
         .seed(~frame_valid || sw[4]),
+        .motion_wide(sw[14]),
         .disp_bank(disp_bank),
         .wr_bank(~disp_bank),
         .frame_done(frame_done),
@@ -397,10 +414,11 @@ module top_fusion (
         .tx(uart_tx)
     );
 
-    // 7-segment: alignment settings
+    // 7-segment: alignment settings or MI48 firmware version
     reg [15:0] dbg_word = 16'd0;
     always @(posedge clk)
-        dbg_word <= sw[8] ? {opt_scale, 1'b0, edge_thr} : {off_x[7:0], off_y[7:0]};
+        dbg_word <= sw[13] ? fw_version :
+                    sw[8]  ? {opt_scale, 1'b0, edge_thr} : {off_x[7:0], off_y[7:0]};
 
     reg [17:0] seg_cnt = 18'd0;
     always @(posedge clk) seg_cnt <= seg_cnt + 1'b1;

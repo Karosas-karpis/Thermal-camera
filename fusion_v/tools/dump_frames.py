@@ -15,7 +15,7 @@ import sys
 import numpy as np
 
 MAGIC = bytes([0xDE, 0xAD, 0xBE, 0xEF])
-LEAD_WORDS = 9                         # words before the header (SPI_LEAD_WORDS in top_thermal.v)
+LEAD_WORDS = 8                         # previous frame's last pixels before the header (SPI_LEAD_WORDS in top_fusion.v)
 HEADER_WORDS = 80
 ROWS, COLS = 62, 80
 WORDS = HEADER_WORDS + ROWS * COLS      # frame length on the wire; the lead words are part of it

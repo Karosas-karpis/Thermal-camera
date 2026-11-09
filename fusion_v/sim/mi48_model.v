@@ -33,6 +33,8 @@ module mi48_model #(
             for (i = 0; i < 256; i = i + 1)
                 regs[i] = 8'h00;
             regs[8'hB1] = 8'h20;
+            regs[8'hB2] = 8'h45;   // FW_VERSION_1 (made-up 4.5)
+            regs[8'hB3] = 8'h0C;   // FW_VERSION_2
             regs[8'hB4] = 8'h04;
             regs[8'hBA] = SENXOR_TYPE;
             booting = 1'b1;

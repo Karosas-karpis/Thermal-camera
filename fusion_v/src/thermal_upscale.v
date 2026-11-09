@@ -1,13 +1,16 @@
 `timescale 1ns / 1ps
 
-// Bilinear upscale of the 80x62 thermal frame to 640x480: 8x in both directions, so the
-// screen shows 60 of the 62 rows (one row cropped top and bottom).
+// Bilinear upscale of the 80x62 thermal frame onto the 640x480 screen. Thermal coordinates
+// are in 1/8 pixel, zoomed around the screen centre: tc = ((screen - centre) * zoom >> 7)
+// + centre + offset. Zoom 128 with offset 0 is 8x in both directions and shows 60 of the
+// 62 rows (one row cropped top and bottom). A larger zoom shrinks the image; screen pixels
+// outside the frame come out with valid = 0.
 // One VGA pixel is 4 clocks, so the single RAM read port gives all 4 neighbours per pixel.
 // Interpolating the raw 0.1 K values keeps the range scaling after this stage smooth.
 //
-// sel follows the pixel clock: x changes on sel 1 and the coordinates below are stable for
-// sel 0..3 one pixel later. Reads are issued on sel 0..3 and return 2 clocks later.
-// Latency from x / y to t is 13 clocks; t then holds for 4 clocks.
+// sel follows the pixel clock, 2 clocks late to match the zoom stages: the coordinates
+// below are stable for sel 0..3 one pixel later. Reads are issued on sel 0..3 and return
+// 2 clocks later. Latency from x / y to t and valid is 15 clocks; both then hold for 4 clocks.
 
 module thermal_upscale (
     input             clk,
@@ -16,19 +19,51 @@ module thermal_upscale (
     input      [9:0]  y,
     input             mirror_x,
     input             flip_y,
+    input      [7:0]  zoom,
+    input  signed [9:0] off_x,
+    input  signed [9:0] off_y,
     output reg [12:0] rd_addr = 13'd0,
     input      [15:0] rd_data,
-    output reg [15:0] t = 16'd0
+    output reg [15:0] t = 16'd0,
+    output            valid
 );
 
-    localparam [9:0] X_LAST = 10'd639;
-    localparam [9:0] Y_LAST = 10'd479;
-    localparam [9:0] Y_CROP = 10'd8;
+    localparam [9:0] X_LAST = 10'd639;   // last 1/8 column of the frame (80 * 8 - 1)
+    localparam [9:0] Y_LAST = 10'd495;   // last 1/8 row of the frame (62 * 8 - 1)
+    localparam signed [12:0] Y_CROP = 13'sd8;
     localparam [9:0] HALF   = 10'd4;   // thermal pixel centres are half a pixel in
 
-    reg [1:0] sel = 2'd0;
-    always @(posedge clk)
-        sel <= tick ? 2'd1 : sel + 1'b1;
+    reg [1:0] tick_d = 2'b00;
+    reg [1:0] sel    = 2'd0;
+    always @(posedge clk) begin
+        tick_d <= {tick_d[0], tick};
+        sel    <= tick_d[1] ? 2'd1 : sel + 1'b1;
+    end
+
+    // Zoom and offset in screen space, then mirror / flip inside the frame
+    reg signed [19:0] zx = 20'sd0;
+    reg signed [19:0] zy = 20'sd0;
+    reg signed [12:0] tcx = 13'sd0;
+    reg signed [12:0] tcy = 13'sd0;
+
+    wire signed [10:0] dx = $signed({1'b0, x}) - 11'sd320;
+    wire signed [10:0] dy = $signed({1'b0, y}) - 11'sd240;
+
+    always @(posedge clk) begin
+        zx  <= dx * $signed({1'b0, zoom});
+        zy  <= dy * $signed({1'b0, zoom});
+        tcx <= (zx >>> 7) + 13'sd320 + off_x;
+        tcy <= (zy >>> 7) + 13'sd240 + off_y + Y_CROP;
+    end
+
+    wire in_x = (tcx >= 13'sd0) && (tcx <= $signed({3'b000, X_LAST}));
+    wire in_y = (tcy >= 13'sd0) && (tcy <= $signed({3'b000, Y_LAST}));
+    wire [9:0] cx = (tcx < 13'sd0) ? 10'd0 : in_x ? tcx[9:0] : X_LAST;
+    wire [9:0] cy = (tcy < 13'sd0) ? 10'd0 : in_y ? tcy[9:0] : Y_LAST;
+
+    // valid_d[0] is registered with xm / ym, which are 12 clocks before t
+    reg [12:0] valid_d = 13'd0;
+    assign valid = valid_d[12];
 
     reg [9:0] xm = 10'd0;
     reg [9:0] ym = 10'd0;
@@ -47,8 +82,9 @@ module thermal_upscale (
     reg [2:0]  fy = 3'd0;
 
     always @(posedge clk) begin
-        xm <= mirror_x ? X_LAST - x : x;
-        ym <= (flip_y ? Y_LAST - y : y) + Y_CROP;
+        xm <= mirror_x ? X_LAST - cx : cx;
+        ym <= flip_y   ? Y_LAST - cy : cy;
+        valid_d <= {valid_d[11:0], in_x && in_y};
 
         ux <= (xm > HALF) ? xm - HALF : 10'd0;
         uy <= (ym > HALF) ? ym - HALF : 10'd0;

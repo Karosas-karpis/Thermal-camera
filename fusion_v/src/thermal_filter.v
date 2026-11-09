@@ -3,8 +3,9 @@
 // Temporal filter between the SPI reader and the frame RAM, plus frame min/max.
 // Each pixel: new = old + (sample - old) / 4, where old is the same pixel of the
 // frame being displayed (the previous accepted frame), read through RAM port A.
-// A sample more than 2 K from old (motion), or any pixel while seed is high (no
-// previous frame), is stored unfiltered so moving objects leave no trail.
+// A sample more than the motion threshold from old (2 K, or 5 K with motion_wide), or
+// any pixel while seed is high (no previous frame), is stored unfiltered so moving
+// objects leave no trail.
 // Because the old frame is the displayed bank, a rejected frame (bank not swapped)
 // never feeds the filter.
 //
@@ -17,6 +18,7 @@
 module thermal_filter (
     input             clk,
     input             seed,
+    input             motion_wide,   // motion threshold 5 K instead of 2 K
     input             disp_bank,
     input             wr_bank,
     input             frame_done,
@@ -35,7 +37,8 @@ module thermal_filter (
     output reg [15:0] frame_max = 16'd0
 );
 
-    localparam signed [16:0] MOTION = 17'sd20;   // 2.0 K
+    localparam signed [16:0] MOTION_NARROW = 17'sd20;   // 2.0 K
+    localparam signed [16:0] MOTION_WIDE   = 17'sd50;   // 5.0 K
 
     reg        we_q   = 1'b0;
     reg [12:0] addr_q = 13'd0;
@@ -52,7 +55,8 @@ module thermal_filter (
     end
 
     wire signed [16:0] d     = $signed({1'b0, data_q}) - $signed({1'b0, a_dout});
-    wire               big   = (d > MOTION) || (d < -MOTION);
+    wire signed [16:0] motion = motion_wide ? MOTION_WIDE : MOTION_NARROW;
+    wire               big   = (d > motion) || (d < -motion);
     wire signed [16:0] step  = (d + 17'sd2) >>> 2;
     wire        [15:0] blend = a_dout + step[15:0];
     wire        [15:0] next  = (seed || big) ? data_q : blend;

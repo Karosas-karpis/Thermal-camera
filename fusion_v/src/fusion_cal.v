@@ -1,16 +1,16 @@
 `timescale 1ns / 1ps
 
 // Alignment settings on the buttons. A held button repeats at ~12 Hz, which also takes
-// care of contact bounce.
-//   cal_alt = 0: U/D/L/R move the optical image up/down/left/right
-//   cal_alt = 1: U/D zoom the optical image in/out, L/R lower/raise the edge threshold
-// reset puts everything back to the defaults. Scale and threshold are the measured alignment
-// (722D); the offsets centre the camera image, as the OV7670 was remounted turned 90 degrees.
+// care of contact bounce. They act on the thermal image; the optical image fills the screen.
+//   cal_alt = 0: U/D/L/R move the thermal image up/down/left/right
+//   cal_alt = 1: U/D zoom the thermal image in/out, L/R lower/raise the edge threshold
+// reset puts everything back to the defaults: the alignment set on the board on 2026-11-09
+// (7-segment 660A / 732D: off_x -154, off_y 10, zoom 115, threshold 45).
 
 module fusion_cal #(
-    parameter signed [9:0] OFF_X_INIT = 10'sd18,
-    parameter signed [9:0] OFF_Y_INIT = 10'sd13,
-    parameter        [7:0] SCALE_INIT = 8'd114,
+    parameter signed [9:0] OFF_X_INIT = -10'sd154,
+    parameter signed [9:0] OFF_Y_INIT = 10'sd10,
+    parameter        [7:0] SCALE_INIT = 8'd115,
     parameter        [6:0] THR_INIT   = 7'd45
 ) (
     input                   clk,

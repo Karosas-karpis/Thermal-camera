@@ -1,9 +1,10 @@
 `timescale 1ns / 1ps
 
-// Fused VGA output. Thermal is the screen reference: bilinear 640x480 from thermal_upscale.
-// The OV7670 is mounted turned 90 degrees clockwise, so its frame is shown flipped vertically.
-// Screen to optical image: u = (x * scale >> 8) + off_x, v = (y * scale >> 8) + off_y,
-// then camera pixel col = u, row = 239 - v. A smaller scale zooms in.
+// Fused VGA output. The optical frame is the screen reference: the full 320x240 at 2x.
+// The OV7670 is mounted turned 90 degrees clockwise, so its frame is shown flipped vertically
+// (camera col = x / 2, row = 239 - y / 2).
+// The thermal image is aligned onto it: thermal_upscale applies scale (zoom, 128 = 8x) and
+// off_x / off_y. Outside the thermal frame the thermal colour is black.
 //
 // mode: 0 = thermal
 //       1 = optical grayscale
@@ -14,9 +15,9 @@
 // applied only when it moves more than HYST, widened to at least MIN_SPAN, and a serial
 // divider gives scale_t = 63 * 65536 / span, so level = diff * scale_t >> 16.
 //
-// Latency from x / y to rgb is 17 clocks, and hsync / vsync are delayed to match:
-//   thermal: 13 upscale, 1 diff, 1 level
-//   optical: 3 address, 2 RAM, delayed 10 so Y arrives with the level
+// Latency from x / y to rgb is 19 clocks, and hsync / vsync are delayed to match:
+//   thermal: 15 upscale, 1 diff, 1 level
+//   optical: 3 address, 2 RAM, delayed 12 so Y arrives with the level
 //   then 1 base colour, 1 edge overlay
 
 module fusion_view (
@@ -36,9 +37,9 @@ module fusion_view (
     input                    fixed_range,    // 15.0 .. 40.5 C instead of frame min/max
     input                    gray,           // grayscale instead of colour palette
     input             [1:0]  mode,
-    input  signed     [9:0]  off_x,
+    input  signed     [9:0]  off_x,          // thermal offset, 1/8 thermal pixel
     input  signed     [9:0]  off_y,
-    input             [7:0]  scale,
+    input             [7:0]  scale,          // thermal zoom, 128 = 8x; larger shrinks it
     output            [12:0] rd_addr,
     input             [15:0] rd_data,
     output reg        [16:0] opt_addr = 17'd0,
@@ -53,10 +54,11 @@ module fusion_view (
     localparam [15:0] MIN_SPAN  = 16'd50;     // 5.0 K
     localparam [5:0]  HOT_LEVEL = 6'd40;
 
-    localparam integer SYNC_DELAY = 16;       // the controller's sync is already 1 clock late
-    localparam integer OPT_DELAY  = 10;
+    localparam integer SYNC_DELAY = 18;       // the controller's sync is already 1 clock late
+    localparam integer OPT_DELAY  = 12;
 
     wire [15:0] t;
+    wire        t_valid;
 
     thermal_upscale upscale (
         .clk(clk),
@@ -65,9 +67,13 @@ module fusion_view (
         .y(y),
         .mirror_x(mirror_x),
         .flip_y(flip_y),
+        .zoom(scale),
+        .off_x(off_x),
+        .off_y(off_y),
         .rd_addr(rd_addr),
         .rd_data(rd_data),
-        .t(t)
+        .t(t),
+        .valid(t_valid)
     );
 
     // Range smoothing. min_f / max_f are the frame min/max averaged over frames, with
@@ -173,13 +179,18 @@ module fusion_view (
     wire [32:0] prod     = diff_q * scale_t;
     wire [5:0]  level    = (prod[32:16] > 17'd63) ? 6'd63 : prod[21:16];
 
+    reg [1:0] tv_d = 2'b00;
+
     always @(posedge clk) begin
         diff_q  <= diff;
         level_q <= level;
+        tv_d    <= {tv_d[0], t_valid};
     end
 
-    // Optical address: (x * scale >> 8) + offset, flipped vertically to the camera's layout.
-    // Off-frame pixels are flagged invalid.
+    wire in_frame = tv_d[1];   // thermal valid, aligned with level_q
+
+    // Optical address: screen / 2, flipped vertically to the camera's layout. The stages
+    // match the thermal pipeline timing; opt_ok is kept for frames that don't fill the screen.
     reg        [17:0] mx = 18'd0;
     reg        [17:0] my = 18'd0;
     reg signed [11:0] ox = 12'sd0;
@@ -190,10 +201,10 @@ module fusion_view (
     wire [7:0] cam_row = 8'd239 - oy[7:0];
 
     always @(posedge clk) begin
-        mx <= x * scale;
-        my <= y * scale;
-        ox <= $signed({2'b00, mx[17:8]}) + off_x;
-        oy <= $signed({2'b00, my[17:8]}) + off_y;
+        mx <= {8'd0, x};
+        my <= {8'd0, y};
+        ox <= $signed({3'b000, mx[9:1]});
+        oy <= $signed({3'b000, my[9:1]});
         opt_ok   <= (ox >= 12'sd0) && (ox < 12'sd320) && (oy >= 12'sd0) && (oy < 12'sd240);
         opt_addr <= {1'b0, cam_row, 8'd0} + {3'b000, cam_row, 6'd0} + {8'd0, ox[8:0]};
     end
@@ -231,6 +242,7 @@ module fusion_view (
     end
 
     wire [11:0] thermal_px = !frame_valid ? 12'h222 :
+                             !in_frame    ? 12'h000 :
                              gray         ? {3{level_q[5:2]}} : heat;
     wire [11:0] gray_px    = {3{luma}};
 
@@ -244,7 +256,7 @@ module fusion_view (
             2'd0:    base_q <= thermal_px;
             2'd1:    base_q <= gray_px;
             2'd2:    base_q <= thermal_px;
-            default: base_q <= (frame_valid && level_q >= HOT_LEVEL) ? thermal_px : gray_px;
+            default: base_q <= (frame_valid && in_frame && level_q >= HOT_LEVEL) ? thermal_px : gray_px;
         endcase
 
         if (mode != 2'd2)
@@ -258,7 +270,7 @@ module fusion_view (
             endcase
 
         // Bright edges vanish on the white-hot end and dark ones on the cold end
-        dark_q <= level_q[5];
+        dark_q <= in_frame && level_q[5];
     end
 
     function [3:0] edge_mix(input [3:0] c, input [3:0] amt, input dark);
@@ -275,14 +287,14 @@ module fusion_view (
     // Sync and blanking delayed to match the image
     reg [SYNC_DELAY - 1:0] hs_d  = {SYNC_DELAY{1'b0}};
     reg [SYNC_DELAY - 1:0] vs_d  = {SYNC_DELAY{1'b0}};
-    reg [15:0]             von_d = 16'd0;
+    reg [SYNC_DELAY - 1:0] von_d = {SYNC_DELAY{1'b0}};
 
     always @(posedge clk) begin
         hs_d  <= {hs_d[SYNC_DELAY - 2:0], hsync_in};
         vs_d  <= {vs_d[SYNC_DELAY - 2:0], vsync_in};
-        von_d <= {von_d[14:0], video_on};
+        von_d <= {von_d[SYNC_DELAY - 2:0], video_on};
 
-        if (!von_d[15])
+        if (!von_d[SYNC_DELAY - 1])
             rgb <= 12'h000;
         else
             rgb <= {edge_mix(base_q[11:8], amt_q, dark_q),

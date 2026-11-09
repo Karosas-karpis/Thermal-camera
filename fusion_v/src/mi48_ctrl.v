@@ -5,59 +5,84 @@
 //   2. poll STATUS (0xB6) until BOOTING_UP (bit 5) clears
 //   3. read SENXOR_TYPE (0xBA) for the debug LEDs
 //   4. FRAME_RATE (0xB4)  = FRAME_RATE_DIV
-//   5. FRAME_MODE (0xB1)  = 0x02 (continuous stream, header included)
-//   6. read FRAME_MODE back, then config_done
+//   5. read FW_VERSION_1/2 (0xB2, 0xB3) for the 7-segment
+//   6. on-chip filters, only if any bit of filters is set (MI48Dx datasheet v4.0.5,
+//      FILTER_CONTROL; the board's firmware is 3.2.13):
+//        0xD1/0xD2 = TEMPORAL_STRENGTH
+//        0xD0 = bit0 temporal, bit1 temporal init, bit2 rolling average (depth 0xD3,
+//               reset 4), bit5 median 5x5 instead of 3x3, bit6 median
+//      then wait INIT_CYCLES: the temporal init takes ~40 ms
+//   7. FRAME_MODE (0xB1)  = 0x02 (continuous stream, header included)
+//   8. read FRAME_MODE back, then config_done
+// filters = {median 5x5, median, rolling average, temporal}, latched when bring-up
+// starts. filters[3] alone also turns the median on.
 // Any NACK or I2C timeout sets i2c_error (sticky) and restarts from step 1.
 
 module mi48_ctrl #(
     parameter [6:0]   I2C_ADDR       = 7'h40,
-    parameter [7:0]   FRAME_RATE_DIV = 8'd1,
+    parameter [7:0]   FRAME_RATE_DIV = 8'd4,
+    parameter [15:0]  TEMPORAL_STRENGTH = 16'd50,   // reset value; 128 ghosted badly; Meridian's GUI uses 125
     parameter integer QUARTER_TICKS  = 500,
     parameter integer RESET_CYCLES   = 100_000,     // 1 ms
     parameter integer BOOT_CYCLES    = 50_000_000,  // 500 ms
     parameter integer POLL_CYCLES    = 1_000_000,   // 10 ms
     parameter integer RETRY_CYCLES   = 20_000_000,  // 200 ms
+    parameter integer INIT_CYCLES    = 10_000_000,  // 100 ms
     parameter integer I2C_TIMEOUT    = 5_000_000    // 50 ms
 ) (
     input            clk,
     input            reset,
+    input      [3:0] filters,
     output reg       thermal_rst_n = 1'b0,
     inout            scl,
     inout            sda,
     output reg       config_done   = 1'b0,
     output reg       i2c_error     = 1'b0,
     output reg [7:0] sensor_type   = 8'd0,
-    output reg [7:0] frame_mode    = 8'd0
+    output reg [7:0] frame_mode    = 8'd0,
+    output reg [15:0] fw_version   = 16'd0   // {FW_VERSION_1, FW_VERSION_2}
 );
 
     localparam [7:0]
         REG_FRAME_MODE  = 8'hB1,
+        REG_FW_VERSION1 = 8'hB2,
+        REG_FW_VERSION2 = 8'hB3,
         REG_FRAME_RATE  = 8'hB4,
         REG_STATUS      = 8'hB6,
-        REG_SENXOR_TYPE = 8'hBA;
+        REG_SENXOR_TYPE = 8'hBA,
+        REG_FILTER_CTRL = 8'hD0,
+        REG_FILTER_LSB  = 8'hD1,
+        REG_FILTER_MSB  = 8'hD2;
 
     localparam [7:0] FRAME_MODE_STREAM = 8'h02;
 
-    localparam [3:0]
-        S_RESET      = 4'd0,
-        S_BOOT       = 4'd1,
-        S_POLL       = 4'd2,
-        S_POLL_CHECK = 4'd3,
-        S_POLL_GAP   = 4'd4,
-        S_TYPE       = 4'd5,
-        S_TYPE_SAVE  = 4'd6,
-        S_RATE       = 4'd7,
-        S_MODE       = 4'd8,
-        S_MODE_RB    = 4'd9,
-        S_MODE_SAVE  = 4'd10,
-        S_RUN        = 4'd11,
-        S_ERROR      = 4'd12,
-        S_I2C_WAIT   = 4'd13;
+    localparam [4:0]
+        S_RESET      = 5'd0,
+        S_BOOT       = 5'd1,
+        S_POLL       = 5'd2,
+        S_POLL_CHECK = 5'd3,
+        S_POLL_GAP   = 5'd4,
+        S_TYPE       = 5'd5,
+        S_TYPE_SAVE  = 5'd6,
+        S_RATE       = 5'd7,
+        S_MODE       = 5'd8,
+        S_MODE_RB    = 5'd9,
+        S_MODE_SAVE  = 5'd10,
+        S_RUN        = 5'd11,
+        S_ERROR      = 5'd12,
+        S_I2C_WAIT   = 5'd13,
+        S_FW1        = 5'd14,
+        S_FW2        = 5'd15,
+        S_FILT_LSB   = 5'd16,
+        S_FILT_MSB   = 5'd17,
+        S_FILT_CTRL  = 5'd18,
+        S_FILT_WAIT  = 5'd19;
 
-    reg [3:0]  state     = S_RESET;
-    reg [3:0]  ret_state = S_RESET;
+    reg [4:0]  state     = S_RESET;
+    reg [4:0]  ret_state = S_RESET;
     reg [25:0] count     = 26'd0;
     reg [7:0]  last_rd   = 8'd0;
+    reg [3:0]  filt      = 4'd0;
 
     reg        i2c_start = 1'b0;
     reg        i2c_read  = 1'b0;
@@ -86,7 +111,7 @@ module mi48_ctrl #(
         .sda(sda)
     );
 
-    task issue(input rd, input [7:0] register, input [7:0] value, input [3:0] next);
+    task issue(input rd, input [7:0] register, input [7:0] value, input [4:0] next);
         begin
             i2c_start <= 1'b1;
             i2c_read  <= rd;
@@ -112,6 +137,7 @@ module mi48_ctrl #(
                 S_RESET: begin
                     thermal_rst_n <= 1'b0;
                     config_done   <= 1'b0;
+                    filt          <= filters;
                     if (count == RESET_CYCLES - 1) begin
                         count         <= 26'd0;
                         thermal_rst_n <= 1'b1;
@@ -156,7 +182,38 @@ module mi48_ctrl #(
                     state <= S_RATE;
                 end
 
-                S_RATE: issue(1'b0, REG_FRAME_RATE, FRAME_RATE_DIV, S_MODE);
+                S_RATE: issue(1'b0, REG_FRAME_RATE, FRAME_RATE_DIV, S_FW1);
+
+                S_FW1: issue(1'b1, REG_FW_VERSION1, 8'h00, S_FW2);
+
+                S_FW2: begin
+                    fw_version[15:8] <= last_rd;
+                    issue(1'b1, REG_FW_VERSION2, 8'h00, S_FILT_LSB);
+                end
+
+                // With no filter selected the sensor setup stays as before filter support
+                S_FILT_LSB: begin
+                    fw_version[7:0] <= last_rd;
+                    if (filt == 4'd0)
+                        state <= S_MODE;
+                    else
+                        issue(1'b0, REG_FILTER_LSB, TEMPORAL_STRENGTH[7:0], S_FILT_MSB);
+                end
+
+                S_FILT_MSB:  issue(1'b0, REG_FILTER_MSB, TEMPORAL_STRENGTH[15:8], S_FILT_CTRL);
+
+                S_FILT_CTRL: issue(1'b0, REG_FILTER_CTRL,
+                                   {1'b0, filt[2] | filt[3], filt[3], 2'b00, filt[1], filt[0], filt[0]},
+                                   S_FILT_WAIT);
+
+                S_FILT_WAIT: begin
+                    if (count == INIT_CYCLES - 1) begin
+                        count <= 26'd0;
+                        state <= S_MODE;
+                    end else begin
+                        count <= count + 1'b1;
+                    end
+                end
 
                 S_MODE: issue(1'b0, REG_FRAME_MODE, FRAME_MODE_STREAM, S_MODE_RB);
 

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 // MI48 bring-up + SPI capture against the behavioural model.
-// Checks: register writes, FRAME_MODE readback, SENXOR_TYPE, full frames in the
+// Checks: register writes (all on-chip filters on), FRAME_MODE readback, SENXOR_TYPE, firmware version, full frames in the
 // RAM bank, min/max/centre, header CRC, and recovery from SCLK glitches:
 //   1 extra edge   -> frame still aligned but CRC fails
 //   48 extra edges -> DATA_READY falls early, frame dropped (sync_early)
@@ -21,6 +21,7 @@ module tb_thermal_capture;
     wire rst_n, sclk, mosi, miso, cs_n, drdy;
     wire config_done, i2c_error;
     wire [7:0] sensor_type, frame_mode;
+    wire [15:0] fw_version;
 
     mi48_ctrl #(
         .FRAME_RATE_DIV(8'd4),
@@ -29,17 +30,20 @@ module tb_thermal_capture;
         .BOOT_CYCLES(1_000),
         .POLL_CYCLES(2_000),
         .RETRY_CYCLES(2_000),
-        .I2C_TIMEOUT(100_000)
+        .I2C_TIMEOUT(100_000),
+        .INIT_CYCLES(1_000)
     ) ctrl (
         .clk(clk),
         .reset(reset),
+        .filters(4'b1111),
         .thermal_rst_n(rst_n),
         .scl(scl),
         .sda(sda),
         .config_done(config_done),
         .i2c_error(i2c_error),
         .sensor_type(sensor_type),
-        .frame_mode(frame_mode)
+        .frame_mode(frame_mode),
+        .fw_version(fw_version)
     );
 
     wire        pix_we;
@@ -92,6 +96,7 @@ module tb_thermal_capture;
     thermal_filter filt (
         .clk(clk),
         .seed(1'b1),
+        .motion_wide(1'b0),
         .disp_bank(~wr_bank),
         .wr_bank(wr_bank),
         .frame_done(frame_done),
@@ -192,6 +197,10 @@ module tb_thermal_capture;
         check("frame_mode", frame_mode, 8'h02);
         check("sensor_type", sensor_type, 8'h03);
         check("frame_rate reg", sensor.regs[8'hB4], 8'h04);
+        check("fw_version", fw_version, 16'h450C);
+        check("temporal strength lsb", sensor.regs[8'hD1], 8'd50);
+        check("temporal strength msb", sensor.regs[8'hD2], 8'd0);
+        check("filter_control reg", sensor.regs[8'hD0], 8'h67);
         check("i2c_error", i2c_error, 1'b0);
 
         wait_frame;
